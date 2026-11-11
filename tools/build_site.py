@@ -381,7 +381,8 @@ def field_rows(schema, spec, prefix="", visited=None):
     required = set(resolved.get("required", []))
     for name, prop in resolved.get("properties", {}).items():
         target = deref(prop, spec)
-        rows.append([prefix + name, type_of(target, spec), "Yes" if name in required else "No", meaning_of(target)])
+        own = {k: v for k, v in prop.items() if k != "$ref"} if isinstance(prop, dict) else {}  # a field's own words beat the shared definition's
+        rows.append([prefix + name, type_of(target, spec), "Yes" if name in required else "No", meaning_of({**target, **own})])
         rows += field_rows(prop, spec, f"{prefix}{name}.", visited)
     for key in ("anyOf", "oneOf"):
         for option in resolved.get(key, []):
@@ -403,7 +404,8 @@ def expand_refs(node, spec, visited):
             target = spec
             for part in node["$ref"].lstrip("#/").split("/"):
                 target = target.get(part.replace("~1", "/"), {})
-            return expand_refs(target, spec, visited)
+            siblings = {key: expand_refs(value, spec, visited) for key, value in node.items() if key != "$ref"}
+            return {**expand_refs(target, spec, visited), **siblings}
         return {key: expand_refs(value, spec, visited) for key, value in node.items()}
     if isinstance(node, list):
         return [expand_refs(value, spec, visited) for value in node]
@@ -877,8 +879,79 @@ def cli_item(name, text):
     return {"title": name, "kind": "CLI simulator", "intro": "", "actors": [], "code": "", "steps": steps}
 
 
+# ---------------- Links and rewrites (also used by the parallel workers) ----------------
+MARKDOWN_LINK = re.compile(r"(?<!!)\[([^\]]+)\]\(([^)\s]+)\)")
+urls = {}
+SIMPLE_FILE = ROOT / "source" / "simple" / "done.jsonl"
+SIMPLE = {}
+if SIMPLE_FILE.exists():
+    for simple_line in SIMPLE_FILE.read_text(encoding="utf-8").splitlines():
+        saved = json.loads(simple_line)
+        if saved.get("ok"):
+            SIMPLE[saved["h"]] = saved["s"]
+
+
+def simple_version(text):
+    masked, spans = protect(text)
+    found = SIMPLE.get(unit_hash(masked))
+    return restore(found, spans) if found else None
+
+
+def local_address(url):
+    return re.sub(r"^https://(docs|reference)\.langchain\.com", "", url.split("#")[0]).removesuffix("/").removesuffix(".md").removesuffix("/")
+
+
+def simple_cell(value):
+    replaced = simple_version(value) if isinstance(value, str) else None
+    return {"t": replaced, "o": value} if replaced else value
+
+
+def simple_text(text):
+    """Use saved plain-English rewrites where they exist, keeping the original wording too."""
+    changed = False
+    out = []
+    for paragraph in text.split("\n\n"):
+        replaced = simple_version(paragraph)
+        changed = changed or bool(replaced)
+        out.append(replaced or paragraph)
+    return "\n\n".join(out) if changed else None
+
+
+def resolve_step(step):
+    def relink(match):
+        target = urls.get(local_address(match[2]))
+        return f"[{match[1]}](#/{target})" if target else match[0]
+    if step.get("t"):
+        step["t"] = MARKDOWN_LINK.sub(relink, step["t"])
+        rewritten = simple_text(step["t"])
+        if rewritten:
+            step["o"], step["t"] = step["t"], rewritten
+    table = step.get("table")
+    if table:
+        table["rows"] = [[({"t": c["t"], "i": urls[c["u"]]} if c.get("u") in urls else c["t"]) if isinstance(c, dict) else simple_cell(c) for c in row] for row in table["rows"]]
+
+
+def resolve_item(item):
+    for step in item["steps"]:
+        resolve_step(step)
+    for branch in (item.get("paths") or {}).values():
+        for step in branch:
+            resolve_step(step)
+
+
+def slim_record(file_path):
+    """Only what the index needs from one saved reference page, so it can be kept on disk and reused."""
+    record = read_record(file_path)
+    slim = {k: record.get(k) for k in ("id", "qualifiedName", "packageId", "name")}
+    if record.get("members") or (record.get("relations") or {}).get("extends"):
+        slim["links"] = {"packageId": record.get("packageId"), "typeRefs": record.get("typeRefs"), "relations": record.get("relations"),
+                         "members": [{k: m.get(k) for k in ("name", "kind", "type", "visibility")} for m in record.get("members") or []]}
+    slim["heading"] = ref_heading(file_path.name, record)
+    return slim
+
+
 # ---------------- Assemble ----------------
-items, groups_index = [], collections.defaultdict(lambda: collections.defaultdict(list))
+items, groups_index =[], collections.defaultdict(lambda: collections.defaultdict(list))
 GROUPS = [
     ("m0", "Start here", "Start from zero", "APIs, tokens, agents and how the family of products fits together."),
     ("m1", "Build", "1. LangChain", "Models, messages, tools, agents, middleware and streaming."),
@@ -929,7 +1002,7 @@ if CHECKPOINT.exists():
         resume = saved_progress
 if resume:
     for leftover in CHUNKS.glob("*.js"):
-        if int(leftover.stem) >= resume["chunks"]:
+        if leftover.stem.isdigit() and int(leftover.stem) >= resume["chunks"]:
             leftover.unlink()
     print(f"continuing a stopped build: {resume['emitted']:,} reference pages already done", flush=True)
 else:
@@ -941,7 +1014,7 @@ chunk_buffer, chunk_size, chunk_number, built_steps = {}, 0, (resume or {}).get(
 audit_map = dict((resume or {}).get("audit", {}))
 large_done_rows = dict((resume or {}).get("rows", {}))
 large_index, large_skip, checkpointing = 0, (resume or {}).get("emitted", 0), True
-MARKDOWN_LINK = re.compile(r"(?<!!)\[([^\]]+)\]\(([^)\s]+)\)")
+worker_count = (resume or {}).get("workers")  # kept the same on a restart, so each worker's saved progress still fits
 
 
 def flush_chunk():
@@ -952,70 +1025,20 @@ def flush_chunk():
         chunk_number += 1
         chunk_buffer, chunk_size = {}, 0
         if checkpointing:
-            temporary = CHECKPOINT.with_suffix(".tmp")
-            temporary.write_text(json.dumps({"fingerprint": FINGERPRINT, "emitted": large_index, "chunks": chunk_number, "steps": built_steps,
-                                             "rows": large_done_rows, "audit": audit_map}), encoding="utf-8")
-            temporary.replace(CHECKPOINT)
+            save_checkpoint()
 
 
-SIMPLE_FILE = ROOT / "source" / "simple" / "done.jsonl"
-SIMPLE = {}
-if SIMPLE_FILE.exists():
-    for simple_line in SIMPLE_FILE.read_text(encoding="utf-8").splitlines():
-        saved = json.loads(simple_line)
-        if saved.get("ok"):
-            SIMPLE[saved["h"]] = saved["s"]
-print("plain-English rewrites available:", len(SIMPLE), flush=True)
-
-
-def simple_version(text):
-    masked, spans = protect(text)
-    found = SIMPLE.get(unit_hash(masked))
-    return restore(found, spans) if found else None
-
-
-def local_address(url):
-    return re.sub(r"^https://(docs|reference)\.langchain\.com", "", url.split("#")[0]).removesuffix("/").removesuffix(".md").removesuffix("/")
-
-
-def resolve_step(step):
-    def relink(match):
-        target = urls.get(local_address(match[2]))
-        return f"[{match[1]}](#/{target})" if target else match[0]
-    if step.get("t"):
-        step["t"] = MARKDOWN_LINK.sub(relink, step["t"])
-        rewritten = simple_text(step["t"])
-        if rewritten:
-            step["o"], step["t"] = step["t"], rewritten
-    table = step.get("table")
-    if table:
-        table["rows"] = [[({"t": c["t"], "i": urls[c["u"]]} if c.get("u") in urls else c["t"]) if isinstance(c, dict) else simple_cell(c) for c in row] for row in table["rows"]]
-
-
-def simple_cell(value):
-    replaced = simple_version(value) if isinstance(value, str) else None
-    return {"t": replaced, "o": value} if replaced else value
-
-
-def simple_text(text):
-    """Use saved plain-English rewrites where they exist, keeping the original wording too."""
-    changed = False
-    out = []
-    for paragraph in text.split("\n\n"):
-        replaced = simple_version(paragraph)
-        changed = changed or bool(replaced)
-        out.append(replaced or paragraph)
-    return "\n\n".join(out) if changed else None
+def save_checkpoint():
+    temporary = CHECKPOINT.with_suffix(".tmp")
+    temporary.write_text(json.dumps({"fingerprint": FINGERPRINT, "emitted": large_index, "chunks": chunk_number, "steps": built_steps,
+                                     "rows": large_done_rows, "audit": audit_map, "workers": worker_count}), encoding="utf-8")
+    temporary.replace(CHECKPOINT)
 
 
 def emit(identifier, item):
     """Fix the links in a finished page and write it out. Returns the file number it went into."""
     global chunk_size, built_steps
-    for step in item["steps"]:
-        resolve_step(step)
-    for branch in (item.get("paths") or {}).values():
-        for step in branch:
-            resolve_step(step)
+    resolve_item(item)
     item.setdefault("kind", "Simulation")
     built_steps += len(item["steps"])
     encoded = len(json.dumps(item, ensure_ascii=False))
@@ -1140,8 +1163,26 @@ ref_files = reference_files()
 records_ref, by_q, by_name, ref_rows = {}, {}, {}, {}
 ref_stats = collections.Counter()
 canonical_paths, duplicate_paths = {}, {}
+# Reading 200,000+ small files is mostly waiting on the disk, so many threads read at once,
+# and the result is kept on disk so the next build can skip this step.
+import concurrent.futures  # noqa: E402
+import pickle  # noqa: E402
+index_cache = REFERENCE / "index_cache.pkl"
+index_key = [str((REFERENCE / "index.jsonl").stat().st_mtime_ns) if (REFERENCE / "index.jsonl").exists() else "", len(ref_files), os.environ.get("LAB_SAMPLE", ""),
+             hashlib.sha1(pathlib.Path(__file__).read_bytes()).hexdigest()]
+slims = None
+if index_cache.exists():
+    cached = pickle.loads(index_cache.read_bytes())
+    if cached.get("key") == index_key:
+        slims = cached["slims"]
+        print("reference index loaded from disk", flush=True)
+if slims is None:
+    ordered = sorted(ref_files)
+    with concurrent.futures.ThreadPoolExecutor(16) as pool:
+        slims = dict(zip(ordered, pool.map(slim_record, (ref_files[p] for p in ordered), chunksize=64)))
+    index_cache.write_bytes(pickle.dumps({"key": index_key, "slims": slims}, protocol=pickle.HIGHEST_PROTOCOL))
 for ref_path, file_path in sorted(ref_files.items(), key=lambda pair: (pair[0].count("/"), pair[0])):
-    record = read_record(file_path)
+    record = slims[ref_path]
     if record.get("id"):
         first_path = canonical_paths.setdefault(record["id"], ref_path)
         if first_path != ref_path:  # the same item at a longer address: send that address to the real page
@@ -1150,28 +1191,63 @@ for ref_path, file_path in sorted(ref_files.items(), key=lambda pair: (pair[0].c
     if record.get("qualifiedName"):
         by_q.setdefault(record["qualifiedName"], ref_path)
         by_name.setdefault((record.get("packageId"), record.get("name")), ref_path)
-    if record.get("members") or (record.get("relations") or {}).get("extends"):
-        records_ref[ref_path] = {"packageId": record.get("packageId"), "typeRefs": record.get("typeRefs"), "relations": record.get("relations"),
-                                 "members": [{k: m.get(k) for k in ("name", "kind", "type", "visibility")} for m in record.get("members") or []]}
+    if record.get("links"):
+        records_ref[ref_path] = record["links"]
     pieces = ref_path.strip("/").split("/")
     group_id = LANG_NAMES.get(pieces[0], ("other", ""))[0]
     section = pieces[1] if len(pieces) > 1 else "Home"
     if len(pieces) > 2:
         section += " · " + pieces[2]
-    title_text, kind_text = ref_heading(ref_path, record)
+    title_text, kind_text = record["heading"]
+    if title_text == ref_path.rsplit("/", 1)[-1] or title_text.endswith(".json"):
+        title_text = ref_path  # ref_heading falls back to the address when a page has no name
     ref_rows[ref_path] = reserve(group_id, section, title_text, kind_text, "https://reference.langchain.com" + ref_path)
 ref_names = set(by_q)
 for ref_path, first_path in duplicate_paths.items():
     urls[ref_path] = ref_rows[first_path][0]
 print("reference pages indexed:", len(ref_rows), "same item at a longer address:", len(duplicate_paths), flush=True)
 
-for ref_path, file_path in sorted(ref_files.items()):
-    if ref_path in duplicate_paths or resumed(ref_rows[ref_path]):
-        continue
-    finish(ref_rows[ref_path], ref_item(ref_path, read_record(file_path), by_q, by_name, ast_map), {"ref": str(file_path.relative_to(REFERENCE))})
-    ref_stats["pages"] += 1
-    if ref_stats["pages"] % 20_000 == 0:
-        print("reference pages built:", ref_stats["pages"], flush=True)
+slims = None
+# Build the reference pages in several worker processes at once. Each worker saves its own progress.
+work = [(ref_path, str(file_path), ref_rows[ref_path][0]) for ref_path, file_path in sorted(ref_files.items()) if ref_path not in duplicate_paths]
+free_gb = 0.0
+if os.name == "nt":
+    class MemoryStatus(ctypes.Structure):
+        _fields_ = [("dwLength", ctypes.c_ulong), ("dwMemoryLoad", ctypes.c_ulong), ("ullTotalPhys", ctypes.c_ulonglong), ("ullAvailPhys", ctypes.c_ulonglong),
+                    ("ullTotalPageFile", ctypes.c_ulonglong), ("ullAvailPageFile", ctypes.c_ulonglong), ("ullTotalVirtual", ctypes.c_ulonglong),
+                    ("ullAvailVirtual", ctypes.c_ulonglong), ("ullAvailExtendedVirtual", ctypes.c_ulonglong)]
+    status = MemoryStatus()
+    status.dwLength = ctypes.sizeof(MemoryStatus)
+    ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(status))
+    free_gb = status.ullAvailPhys / 2 ** 30
+workers = worker_count or max(1, min(6, (os.cpu_count() or 2) - 2, int(free_gb / 0.8)))
+worker_count = workers
+save_checkpoint()
+state_path = SITE_DATA / "workers_state.pkl"
+python_names = {name for name in ref_names if name in ast_map}
+state_path.write_bytes(pickle.dumps({"fingerprint": FINGERPRINT, "urls": urls, "by_q": by_q, "by_name": by_name, "records_ref": records_ref,
+                                     "ast_map": {name: ast_map[name] for name in python_names}, "work": work, "workers": workers,
+                                     "out": str(SITE_DATA), "reference": str(REFERENCE)}, protocol=pickle.HIGHEST_PROTOCOL))
+print(f"building {len(work):,} reference pages with {workers} workers ({free_gb:.1f} GB free)", flush=True)
+finished_shards = set()
+for k in range(workers):
+    shard_result = SITE_DATA / f"shard_{k}.json"
+    if shard_result.exists() and json.loads(shard_result.read_text(encoding="utf-8")).get("fingerprint") == FINGERPRINT:
+        finished_shards.add(k)
+running = {k: subprocess.Popen([sys.executable, "-I", "-X", "utf8", "-u", str(ROOT / "tools" / "ref_shard.py"), str(state_path), str(k)])
+           for k in range(workers) if k not in finished_shards}
+failed = [k for k, process in running.items() if process.wait() != 0]
+if failed:
+    sys.exit(f"reference workers failed: {failed}")
+for k in range(workers):
+    result = json.loads((SITE_DATA / f"shard_{k}.json").read_text(encoding="utf-8"))
+    by_id = result["rows"]
+    for ref_path, _, identifier in work[k::workers]:
+        ref_rows[ref_path][4] = by_id[identifier]
+    audit_map.update(result["audit"])
+    built_steps += result["steps"]
+    ref_stats["pages"] += len(by_id)
+state_path.unlink()
 
 sdk_names = set()
 for full_name, item in ast_map.items():
@@ -1238,6 +1314,8 @@ report = json.dumps({"items": total, "sims": len(SIMS), "chunks": chunk_number, 
                      "steps": built_steps, "by_group": {g["id"]: sum(s["n"] for s in g["sections"]) for g in catalog_groups}}, indent=1)
 (SITE_DATA / "build_report.json").write_text(report, encoding="utf-8")
 CHECKPOINT.unlink(missing_ok=True)
+for shard_result in SITE_DATA.glob("shard_*.json"):
+    shard_result.unlink()
 print(report, flush=True)
 if not os.environ.get("LAB_OUT"):
     old = ROOT / "site" / "data.old"
