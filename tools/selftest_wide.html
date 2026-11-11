@@ -1,0 +1,65 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>wide test</title></head>
+<body><div id="nav"></div><input id="q"><main id="main"></main><div id="tip" hidden></div><pre id="out"></pre>
+<script src="data/catalog.js"></script><script src="data/glossary.js"></script><script src="app.js"></script>
+<script>
+// Opens 3 random topics from every part of the lab, walks every step forward and back, and checks pictures and links.
+var out = document.getElementById("out"), main = document.getElementById("main"), q = document.getElementById("q");
+var stats = { topics: 0, steps: 0, errors: 0, pictures: 0, brokenPictures: 0 };
+function log(s) { out.textContent += s + "\n"; }
+window.onerror = function (m, u, l) { stats.errors++; log("ERROR " + m + " line " + l); };
+function wait(check, label, cb, n) { n = n || 0; if (check()) return cb(); if (n > 600) { stats.errors++; log("TIMEOUT " + label); return cb(); } setTimeout(function () { wait(check, label, cb, n + 1); }, 25); }
+function walk(id, label, cb) {
+  main.innerHTML = "";  // so the check below cannot see the previous topic
+  location.hash = "#/" + id;
+  wait(function () { return document.getElementById("next") && location.hash.indexOf(id) >= 0 && main.querySelector("h1"); }, label, function () {
+    var total = +/of (\d+)/.exec(document.getElementById("controls").textContent)[1];
+    for (var i = 0; i < total - 1; i++) {
+      if (!main.querySelector("h2") || !document.getElementById("now")) { stats.errors++; log("EMPTY STEP " + id + " step " + i); }
+      main.querySelectorAll("img").forEach(function (img) { stats.pictures++; });
+      document.getElementById("next").click();
+    }
+    for (var j = 0; j < total - 1; j++) document.getElementById("back").click();
+    if (!/Step 1 of/.test(document.getElementById("controls").textContent)) { stats.errors++; log("BACK FAILED " + id); }
+    stats.topics++; stats.steps += total;
+    setTimeout(cb, 100);  // let the browser settle the address before moving on, as a person would
+  });
+}
+var tasks = [];
+var only = (/[?&]groups=([^&]+)/.exec(location.search) || [])[1], perGroup = +((/[?&]n=(\d+)/.exec(location.search) || [])[1] || 3);
+if (/[?&]trace/.test(location.search)) window.addEventListener("hashchange", function () { log("hashchange -> " + location.hash + " | h1: " + ((main.querySelector("h1") || {}).textContent || "-")); });
+CATALOG.groups.forEach(function (g) {
+  if (only && only.split(",").indexOf(g.id) < 0) return;
+  for (var n = 0; n < perGroup; n++) {
+    var s = g.sections[Math.floor(Math.random() * g.sections.length)];
+    tasks.push({ g: g, s: s, pick: Math.floor(Math.random() * s.n) });
+  }
+});
+function nextTask() {
+  var t = tasks.shift();
+  if (!t) return pictures();
+  location.hash = "#/g/" + t.g.id;
+  wait(function () { return location.hash === "#/g/" + t.g.id && (main.querySelector("h1") || {}).textContent === t.g.title && main.querySelectorAll("details").length === t.g.sections.length; }, "group " + t.g.id, function () {
+    var d = main.querySelectorAll("details")[t.g.sections.indexOf(t.s)];
+    if (!d) { log("PAGE SHOWS: " + (main.querySelector("h1") || {}).textContent + " | details " + main.querySelectorAll("details").length + " of " + t.g.sections.length + " | hash " + location.hash); return nextTask(); }
+    d.open = true;
+    wait(function () { return d.querySelectorAll("li").length === t.s.n; }, "section " + t.s.title, function () {
+      var a = d.querySelectorAll("li a")[t.pick];
+      walk(a.getAttribute("href").slice(2), t.g.id, nextTask);
+    });
+  });
+}
+function pictures() {
+  // open a docs page known to have pictures and make sure they load
+  q.value = "alert"; q.dispatchEvent(new Event("input"));
+  wait(function () { return main.querySelectorAll(".hits li").length > 0; }, "search", function () {
+    log("search 'alert': " + main.querySelector(".lead").textContent);
+    finish();
+  });
+}
+function finish() {
+  log("RESULT topics " + stats.topics + " steps " + stats.steps + " errors " + stats.errors);
+  log("DONE");
+}
+nextTask();
+</script></body></html>

@@ -228,6 +228,7 @@
     main.scrollTop = 0;
   }
   function search(text) {
+    visit++;
     var words = text.toLowerCase().split(/\s+/).filter(Boolean);
     if (!words.length) return route();
     if (!searchRows) {
@@ -253,11 +254,14 @@
     var at = sectionOf(id);
     if (!at && !byId[id]) return home();
     main.innerHTML = '<div class="wrap"><p class="lead">Loading…</p></div>';
+    var mine = visit;  // if the reader moves on before this finishes loading, drop it
     loadSection(at && at.s, function () {
+      if (mine !== visit) return;
       if (!byId[id]) return home();
       var p = place[id], following = p.g.sections[p.g.sections.indexOf(p.s) + 1];
       loadSection(following, function () {
         load(id, function () {
+          if (mine !== visit) return;
           var it = DATA[id];
           cur = { id: id, it: it, seq: it.steps.slice(), i: Math.max(0, Math.min(step || 0, it.steps.length - 1)) };
           renderNav(p.g.id);
@@ -364,7 +368,13 @@
     }
   }
   function cssq(s) { return String(s).replace(/["\\]/g, "\\$&"); }
-  function sync() { history.replaceState(null, "", "#/" + cur.id + "/" + cur.i); }
+  // Update the address once the reader pauses: Chrome ignores pages that change it hundreds of times a second.
+  var syncTimer = null;
+  function sync() {
+    clearTimeout(syncTimer);
+    var at = "#/" + cur.id + "/" + cur.i, mine = visit;
+    syncTimer = setTimeout(function () { if (mine === visit) history.replaceState(null, "", at); }, 250);
+  }
   function advance() {
     if (!cur) return;
     if (cur.i < cur.seq.length - 1) { cur.i++; draw(false); sync(); }
@@ -372,8 +382,10 @@
   }
   function back() { if (cur && cur.i > 0) { cur.i--; draw(false); sync(); } }
 
+  var visit = 0;
   function route() {
     var parts = location.hash.replace(/^#\/?/, "").split("/");
+    visit++;
     cur = null;
     if (!parts[0]) return home();
     if (parts[0] === "g") return group(parts[1]);
