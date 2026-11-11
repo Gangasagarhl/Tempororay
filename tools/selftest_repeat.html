@@ -1,0 +1,21 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>repeat test</title></head>
+<body><div id="nav"></div><input id="q"><main id="main"></main><div id="tip" hidden></div><pre id="out"></pre>
+<script src="data/catalog.js"></script><script src="data/glossary.js"></script><script src="app.js"></script>
+<script>
+// Open the same topic twice, walk it, then go to a menu page: the menu must appear.
+var out = document.getElementById("out"), main = document.getElementById("main");
+function log(s) { out.textContent += s + "\n"; }
+function h1() { return (main.querySelector("h1") || {}).textContent || "-"; }
+var id = CATALOG.groups[1].sections[0].r[0][0];
+var steps = [
+  function () { location.hash = "#/" + id; },
+  function () { var n = +/of (\d+)/.exec(document.getElementById("controls").textContent)[1]; for (var i = 0; i < n - 1; i++) document.getElementById("next").click(); for (var j = 0; j < n - 1; j++) document.getElementById("back").click(); log("walked " + n + " steps, now at " + location.hash); },
+  function () { location.hash = "#/g/m1"; },
+  function () { location.hash = "#/" + id; },
+  function () { var n = +/of (\d+)/.exec(document.getElementById("controls").textContent)[1]; for (var i = 0; i < n - 1; i++) document.getElementById("next").click(); for (var j = 0; j < n - 1; j++) document.getElementById("back").click(); log("walked again, now at " + location.hash); },
+  function () { location.hash = "#/g/m2"; },
+  function () { log("menu page shows: " + h1() + " with " + main.querySelectorAll("details").length + " sections, address " + location.hash); log(main.querySelectorAll("details").length ? "PASS" : "FAIL"); }
+];
+(function run() { var f = steps.shift(); if (!f) return; f(); setTimeout(function () { log("  page: " + h1() + " | " + location.hash); run(); }, 400); })();
+</script></body></html>
