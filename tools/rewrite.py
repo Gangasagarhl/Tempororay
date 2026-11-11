@@ -69,7 +69,7 @@ def collect():
             source_cache[key] = " ".join(tokens(text))
         return source_cache[key]
 
-    for chunk in sorted((DATA / "chunks").glob("*.js"), key=lambda p: int(p.stem)):
+    for chunk in sorted((DATA / "chunks").glob("*.js"), key=lambda p: p.stem):
         body = chunk.read_text(encoding="utf-8").strip()
         for identifier, item in json.loads(body[body.index(",") + 1:-2]).items():
             source = audit_map.get(identifier)

@@ -30,7 +30,8 @@ def expand(node, spec, visited):
             target = spec
             for part in node["$ref"].lstrip("#/").split("/"):
                 target = target.get(part.replace("~1", "/"), {})
-            return expand(target, spec, visited)
+            siblings = {k: expand(v, spec, visited) for k, v in node.items() if k != "$ref"}
+            return {**expand(target, spec, visited), **siblings}
         return {k: expand(v, spec, visited) for k, v in node.items()}
     if isinstance(node, list):
         return [expand(v, spec, visited) for v in node]
@@ -54,7 +55,7 @@ def report(kind, identifier, missing):
             lost_examples[kind].append({"id": identifier, "missing": sorted(missing)[:40]})
 
 
-for chunk in sorted((DATA / "chunks").glob("*.js"), key=lambda p: int(p.stem)):
+for chunk in sorted((DATA / "chunks").glob("*.js"), key=lambda p: p.stem):
     text = chunk.read_text(encoding="utf-8").strip()
     items = json.loads(text[text.index(",") + 1:-2])
     for identifier, item in items.items():

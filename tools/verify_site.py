@@ -40,7 +40,7 @@ for chunk in (DATA / "chunks").glob("*.js"):
     items = json.loads(text[text.index(",") + 1:-2])
     for identifier, item in items.items():
         ids_in_files.add(identifier)
-        if identifier in rows and rows[identifier][4] != int(chunk.stem):
+        if identifier in rows and str(rows[identifier][4]) != chunk.stem:
             wrong_file += 1
         steps = item.get("steps") or []
         steps_total += len(steps)
