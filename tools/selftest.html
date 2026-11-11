@@ -1,0 +1,50 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>test</title></head>
+<body><div id="nav"></div><input id="q"><main id="main"></main><div id="tip" hidden></div><pre id="out"></pre>
+<script src="data/catalog.js"></script><script src="data/glossary.js"></script><script src="app.js"></script>
+<script>
+var out = document.getElementById("out"), main = document.getElementById("main"), q = document.getElementById("q");
+function log(s) { out.textContent += s + "\n"; }
+window.onerror = function (m, u, l) { log("ERROR " + m + " line " + l); };
+function wait(check, label, cb, n) { n = n || 0; if (check()) return cb(); if (n > 400) { log("TIMEOUT " + label); return cb(); } setTimeout(function () { wait(check, label, cb, n + 1); }, 25); }
+function hasNext() { return !!document.getElementById("next"); }
+function openAndWalk(id, label, cb) {
+  location.hash = "#/" + id;
+  wait(function () { return hasNext() && location.hash.indexOf(id) >= 0; }, label, function () {
+    var h = main.querySelector("h1").textContent, count = 0, total = +/of (\d+)/.exec(document.getElementById("controls").textContent)[1];
+    while (count < total - 1) { document.getElementById("next").click(); count++; }
+    var at = document.getElementById("controls").textContent;
+    document.getElementById("back").click();
+    log("OK " + label + ": " + h + " | steps " + total + " | end: " + at.slice(0, 40) + " | back: " + document.getElementById("controls").textContent.slice(0, 22));
+    cb();
+  });
+}
+function groupRows(group, match, cb) {
+  location.hash = "#/g/" + group.id;
+  var large = group.sections.filter(match)[0];
+  if (!large) { log("NONE " + group.id); return cb(null); }
+  wait(function () { return main.querySelectorAll("details").length === group.sections.length; }, "group " + group.id, function () {
+    var d = main.querySelectorAll("details")[group.sections.indexOf(large)];
+    d.open = true;
+    wait(function () { return d.querySelectorAll("li").length === large.n; }, "section " + large.title, function () {
+      log("OK group " + group.id + " section '" + large.title + "' rows " + large.n);
+      cb(d.querySelector("li a").getAttribute("href").slice(2));
+    });
+  });
+}
+var groups = {}; CATALOG.groups.forEach(function (g) { groups[g.id] = g; });
+var plan = [["refpy", function () { return true; }], ["refjs", function () { return true; }], ["refjava", function () { return true; }], ["refgo", function () { return true; }], ["rest", function () { return true; }], ["m1", function () { return true; }]];
+(function next() {
+  var p = plan.shift();
+  if (!p) return search();
+  groupRows(groups[p[0]], p[1], function (id) { if (!id) return next(); openAndWalk(id, p[0], next); });
+})();
+function search() {
+  q.value = "ChatOpenAI"; q.dispatchEvent(new Event("input"));
+  wait(function () { return main.querySelectorAll(".hits li").length > 0; }, "search", function () {
+    log("OK search: " + main.querySelector(".lead").textContent);
+    var first = main.querySelector(".hits a").getAttribute("href").slice(2);
+    openAndWalk(first, "search hit", function () { log("DONE"); document.title = "done"; });
+  });
+}
+</script></body></html>
