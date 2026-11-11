@@ -1,0 +1,13 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "small_model": "opencode/glm-5.3-flash-free",
+  "agent": {
+    "writer": {
+      "description": "Text in, text out. Has no file, web, or command tools.",
+      "mode": "primary",
+      "permission": {
+        "*": "deny"
+      }
+    }
+  }
+}

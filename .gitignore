@@ -1,0 +1,16 @@
+# Secrets
+.env
+
+# Downloaded or generated (rebuilt by the tools)
+source/
+site/data/
+site/data.new/
+site/data.old/
+site/media/
+site/selftest.html
+logs/
+.venv/
+.venv-dcode/
+__pycache__/
+spikes/diag/
+spikes/lg_project/.langgraph_api/
