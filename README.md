@@ -11,7 +11,7 @@ application was written and tested on Linux. **It has never run on Windows**; th
 
 | File | What it is |
 |---|---|
-| `field_to_test_loop_2026-11-15_build25_rule_tree_and_three_command_rules.zip` + `.SHA256.txt` | the application's code (unpacks to `13_production_app`) |
+| `field_to_test_loop_2026-11-15_build26_three_rules_on_every_installation.zip` + `.SHA256.txt` | the application's code (unpacks to `13_production_app`) |
 | `field_to_test_loop_sample_recordings.zip` + `.SHA256.txt` | five small synthetic recordings for the tests and a first analysis (unpack **inside** `13_production_app`) |
 | `document.html` | the whole system explained, with where the work stands on 15 November 2026 (build 24; build 25 adds what the README section on build 25 says). Download it and open it in a browser |
 | `errors.html` | the errors an analyzer export can hold, explained |
@@ -26,7 +26,7 @@ You need Python 3.10 or newer (from python.org, with "Add python.exe to PATH" ti
 
 ```powershell
 # PowerShell, in the folder with the downloaded files
-Expand-Archive .\field_to_test_loop_2026-11-15_build25_rule_tree_and_three_command_rules.zip -DestinationPath C:\f2t
+Expand-Archive .\field_to_test_loop_2026-11-15_build26_three_rules_on_every_installation.zip -DestinationPath C:\f2t
 Expand-Archive .\field_to_test_loop_sample_recordings.zip -DestinationPath C:\f2t\13_production_app
 cd C:\f2t\13_production_app
 py -3 -m venv .venv
@@ -75,6 +75,10 @@ Open the agent in `C:\f2t\13_production_app` and give it these one at a time.
 The design has no code per measuring tool: any tool's recording is converted to CSV by the people who have the tool, and
 the agent families learn the columns from the files. Of 16 statements, 0 are fully covered, 14 partly, 2 not; these
 verdicts were not raised for what was built on 14 and 15 November, because nothing has run on real data yet.
+
+**Build 26 (15 November 2026)** makes a new installation keep only the three NVMe command rules as well: on the first start the
+37 other rule families go straight to Deleted items (Restore brings one back); an existing library is left as it is. Every
+test group this touches passes.
 
 **Build 25 (15 November 2026, afternoon)** changes, on the owner's word: page 3 and the Rules library are one tree you open
 level by level (section, kind of recording, level, group, item), with "Add" at every level and "Use it in this analysis" for a
