@@ -1,0 +1,1716 @@
+<meta charset="utf-8">
+<title>Model Swap Paper Plan</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600&display=swap">
+<style>
+/* Layout: one reading column, like a lab protocol sheet. Key dates as a strip, tables scroll in their own box. */
+:root {
+  --bg: #f4f7f6;
+  --surface: #ffffff;
+  --ink: #16211e;
+  --muted: #56645f;
+  --rule: #d3dcd8;
+  --accent: #0d6657;
+  --accent-soft: #e2f0ec;
+  --ok: #1c7447;
+  --warn: #8f5600;
+  --open: #a3322a;
+  --code-bg: #eaf0ee;
+  --display: "IBM Plex Sans Condensed", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+  --body: "IBM Plex Sans", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1514; --surface: #171f1d; --ink: #e4ebe8; --muted: #9aa9a4; --rule: #2b3734;
+    --accent: #5fc7b2; --accent-soft: #1b2f2b; --ok: #6fcf98; --warn: #e2ab4f; --open: #f08e84;
+    --code-bg: #1d2725; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1514; --surface: #171f1d; --ink: #e4ebe8; --muted: #9aa9a4; --rule: #2b3734;
+  --accent: #5fc7b2; --accent-soft: #1b2f2b; --ok: #6fcf98; --warn: #e2ab4f; --open: #f08e84;
+  --code-bg: #1d2725; color-scheme: dark;
+}
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.6; }
+.wrap {
+  max-width: 880px; margin: 0 auto; padding-block: 40px 72px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex; flex-direction: column; gap: 44px;
+}
+header, section { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.eyebrow { font-family: var(--mono); font-size: 12.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 0; }
+h1 { font-family: var(--display); font-weight: 600; font-size: clamp(28px, 5vw, 42px); line-height: 1.12; margin: 0; text-wrap: balance; letter-spacing: -0.01em; }
+h2 { font-family: var(--display); font-weight: 600; font-size: 25px; line-height: 1.2; margin: 0; text-wrap: balance; padding-top: 18px; border-top: 2px solid var(--ink); }
+h3 { font-family: var(--display); font-weight: 600; font-size: 18.5px; margin: 8px 0 0; text-wrap: balance; }
+p { margin: 0; max-width: 68ch; }
+.lead { font-size: 18px; }
+ul, ol { margin: 0; padding-left: 1.3em; max-width: 68ch; display: flex; flex-direction: column; gap: 7px; }
+a { color: var(--accent); text-underline-offset: 2px; }
+a:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+strong { font-weight: 600; }
+code { font-family: var(--mono); font-size: 0.88em; background: var(--code-bg); padding: 1px 5px; border-radius: 3px; overflow-wrap: anywhere; }
+pre { margin: 0; background: var(--code-bg); border-left: 3px solid var(--accent); padding: 12px 14px; overflow-x: auto; font-family: var(--mono); font-size: 13.5px; line-height: 1.55; }
+pre code { background: none; padding: 0; font-size: inherit; overflow-wrap: normal; }
+nav { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 14.5px; }
+.dates { display: grid; grid-template-columns: repeat(auto-fit, minmax(128px, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); }
+.dates div { background: var(--surface); padding: 12px 12px 13px; display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.dates b { font-family: var(--mono); font-weight: 500; font-size: 15px; color: var(--accent); font-variant-numeric: tabular-nums; }
+.dates span { font-size: 13.5px; line-height: 1.35; color: var(--muted); }
+.scroll { overflow-x: auto; border: 1px solid var(--rule); background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 14.5px; line-height: 1.45; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; vertical-align: top; padding: 9px 12px; border-bottom: 1px solid var(--rule); }
+th { font-family: var(--mono); font-weight: 500; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
+tr:last-child td { border-bottom: 0; }
+td:first-child { font-weight: 500; }
+.chip { display: inline-block; font-family: var(--mono); font-size: 11.5px; letter-spacing: 0.05em; text-transform: uppercase; padding: 1px 7px; border: 1px solid currentColor; border-radius: 2px; white-space: nowrap; }
+.chip.ok { color: var(--ok); } .chip.warn { color: var(--warn); } .chip.open { color: var(--open); }
+.plain { background: var(--accent-soft); padding: 14px 16px; }
+.plain p { max-width: none; }
+.checks { list-style: none; padding: 0; max-width: none; gap: 0; border: 1px solid var(--rule); background: var(--surface); }
+.checks li { border-bottom: 1px solid var(--rule); }
+.checks li:last-child { border-bottom: 0; }
+.check { display: grid; grid-template-columns: 22px 1fr; gap: 12px; padding: 11px 14px; cursor: pointer; align-items: start; }
+.check input { width: 18px; height: 18px; margin: 3px 0 0; accent-color: var(--accent); }
+.check span { min-width: 0; }
+.check small { display: block; color: var(--muted); font-size: 14px; line-height: 1.45; margin-top: 2px; }
+.steps { counter-reset: step; list-style: none; padding: 0; max-width: none; gap: 22px; }
+.steps > li { counter-increment: step; display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 4px 12px; }
+.steps > li::before { content: counter(step); font-family: var(--mono); font-weight: 500; font-size: 15px; color: var(--accent); border-top: 2px solid var(--accent); padding-top: 4px; }
+.steps > li > div { display: flex; flex-direction: column; gap: 9px; min-width: 0; }
+.steps h3 { margin: 0; }
+.why { color: var(--muted); font-size: 14.5px; }
+footer { font-size: 13.5px; color: var(--muted); border-top: 1px solid var(--rule); padding-top: 16px; }
+.widget { border: 1px solid var(--rule); background: var(--surface); padding: 16px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.widget-label { font-family: var(--mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); margin: 0; }
+.widget .hint { font-size: 14px; color: var(--muted); }
+.seg { display: flex; flex-wrap: wrap; gap: 6px; }
+.seg button { font: inherit; font-size: 14px; line-height: 1.3; padding: 6px 12px; border: 1px solid var(--rule); background: var(--bg); color: var(--ink); cursor: pointer; border-radius: 2px; }
+.seg button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--surface); }
+.seg button:focus-visible, .widget input:focus-visible, .terms summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.ctrl-row { display: flex; flex-direction: column; gap: 6px; }
+.ctrl-head { display: flex; justify-content: space-between; gap: 12px; font-size: 14.5px; }
+.ctrl-head output { font-family: var(--mono); font-variant-numeric: tabular-nums; color: var(--accent); }
+.widget input[type="range"] { width: 100%; accent-color: var(--accent); margin: 0; }
+.meter { position: relative; height: 10px; background: var(--code-bg); }
+.meter i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--accent); }
+.meter .mark { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--open); }
+.result { background: var(--accent-soft); padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; }
+.result p { max-width: none; }
+tr.first td { background: var(--accent-soft); }
+.num { font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px 16px; }
+.form-grid label { display: flex; flex-direction: column; gap: 4px; font-size: 14px; min-width: 0; }
+.form-grid input[type="number"] { font: inherit; font-size: 15px; padding: 6px 8px; border: 1px solid var(--rule); background: var(--bg); color: var(--ink); width: 100%; box-sizing: border-box; }
+.inline-check { display: flex; gap: 8px; align-items: flex-start; font-size: 14px; }
+.inline-check input, .ladder input { accent-color: var(--accent); margin-top: 4px; }
+.ladder { list-style: none; padding: 0; margin: 0; max-width: none; gap: 0; border: 1px solid var(--rule); }
+.ladder li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; padding: 9px 12px; border-bottom: 1px solid var(--rule); align-items: center; }
+.ladder li:last-child { border-bottom: 0; }
+.ladder label { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; min-width: 0; }
+.ladder small { display: block; color: var(--muted); font-size: 13px; }
+.ladder .cum { text-align: right; font-size: 13.5px; }
+.terms { border: 1px solid var(--rule); background: var(--surface); }
+.terms details { border-bottom: 1px solid var(--rule); padding: 0 14px; }
+.terms details:last-child { border-bottom: 0; }
+.terms summary { cursor: pointer; padding: 10px 0; font-weight: 500; }
+.terms details p { padding-bottom: 12px; font-size: 15px; }
+.bars { display: flex; flex-direction: column; gap: 10px; }
+.bar-row { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 2fr) 3.8em; gap: 10px; align-items: center; font-size: 14px; }
+.bar-row .num { text-align: right; }
+.diverge { position: relative; height: 14px; background: var(--code-bg); }
+.diverge::after { content: ""; position: absolute; left: 50%; top: -4px; bottom: -4px; width: 1px; background: var(--ink); }
+.diverge i { position: absolute; top: 0; bottom: 0; background: var(--accent); }
+.diverge i.neg { background: var(--open); }
+.dots { display: grid; grid-template-columns: repeat(auto-fill, minmax(12px, 1fr)); gap: 3px; }
+.dots span { aspect-ratio: 1; background: var(--accent); opacity: 0.4; }
+.dots.show span.dis { background: var(--open); opacity: 1; }
+.papers th { white-space: normal; min-width: 7.5em; }
+.papers td:first-child { min-width: 13em; font-weight: 400; }
+.papers summary { cursor: pointer; font-weight: 500; }
+.papers summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.papers details p { font-size: 13.5px; color: var(--muted); margin-top: 4px; }
+.cell-yes { color: var(--accent); font-weight: 500; }
+.cell-no { color: var(--muted); }
+.cell-unread { color: var(--warn); }
+tr.ours td { background: var(--accent-soft); }
+.map { display: flex; flex-direction: column; border: 1px solid var(--rule); }
+.map > div { padding: 10px 12px; border-bottom: 1px solid var(--rule); display: flex; flex-direction: column; gap: 2px; }
+.map > div:last-child { border-bottom: 0; }
+.map b { font-family: var(--mono); font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 500; }
+.dates em { font-style: normal; font-family: var(--mono); font-size: 12px; color: var(--accent); }
+.progress-line { display: flex; flex-direction: column; gap: 6px; font-size: 14px; color: var(--muted); }
+.flash { display: flex; flex-direction: column; gap: 10px; }
+.flash .q { font-size: 17px; font-weight: 500; max-width: none; }
+.nav-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.btn { font: inherit; font-size: 14px; line-height: 1.3; padding: 6px 12px; border: 1px solid var(--rule); background: var(--bg); color: var(--ink); cursor: pointer; border-radius: 2px; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--surface); }
+.btn[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); font-weight: 500; }
+.btn:focus-visible, .rec button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.checkcol { display: flex; flex-direction: column; gap: 8px; }
+.split { display: flex; height: 22px; border: 1px solid var(--rule); overflow: hidden; }
+.split i { display: block; height: 100%; }
+.split .b { background: var(--accent); }
+.split .p { background: var(--warn); }
+.split .t { background: var(--ok); }
+.split .u { background: var(--code-bg); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13.5px; color: var(--muted); }
+.legend span::before { content: ""; display: inline-block; width: 10px; height: 10px; margin-right: 6px; vertical-align: -1px; background: var(--sw); border: 1px solid var(--rule); }
+.stores { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 8px; }
+.stores > div { border: 1px solid var(--rule); background: var(--surface); padding: 8px 10px; display: flex; flex-direction: column; gap: 2px; font-size: 13.5px; min-width: 0; }
+.stores b { font-family: var(--mono); font-size: 18px; font-weight: 500; }
+.stores .read { border-color: var(--accent); background: var(--accent-soft); }
+.rec { font-family: var(--mono); font-size: 13px; line-height: 1.8; background: var(--code-bg); padding: 12px 14px; overflow-x: auto; white-space: pre; }
+.rec button { font: inherit; background: none; border: 0; border-bottom: 1px dashed var(--accent); color: var(--accent); padding: 0; cursor: pointer; }
+.rec button[aria-pressed="true"] { background: var(--accent); color: var(--surface); }
+.tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; }
+.tiles > div { border: 1px solid var(--rule); border-left: 4px solid var(--tc, var(--rule)); background: var(--surface); padding: 6px 9px; display: flex; flex-direction: column; gap: 1px; font-size: 13px; min-width: 0; }
+.tiles b { font-family: var(--mono); font-size: 17px; font-weight: 500; color: var(--tc, var(--muted)); }
+.tiles small { color: var(--muted); font-size: 12px; }
+.quiz { list-style: none; padding: 0; max-width: none; gap: 10px; }
+.quiz li { border: 1px solid var(--rule); background: var(--bg); padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+.verdict-list { list-style: none; padding: 0; gap: 6px; max-width: none; font-size: 14.5px; }
+.title-in { font: inherit; font-size: 15px; padding: 8px 10px; border: 1px solid var(--rule); background: var(--bg); color: var(--ink); width: 100%; box-sizing: border-box; }
+@media (prefers-reduced-motion: no-preference) { .meter i { transition: width 0.25s ease; } }
+@media (max-width: 520px) { body { font-size: 15.5px; } h2 { font-size: 22px; } .wrap { gap: 36px; } }
+</style>
+
+<div class="wrap">
+
+<header>
+  <p class="eyebrow">Execution plan &middot; prepared 15 November 2026 &middot; target ICML 2027</p>
+  <h1>Do Memory Scores Survive a Model Swap? An Audit of Keep, Wipe and Discount Rules for Agent Memory</h1>
+  <p class="lead">This is the working title and the full plan for one measurement paper. It covers what to do, how and why, what to have in place before you start, how to prepare the data, what to collect, how strong the results must be and where each possible result goes.</p>
+  <div class="plain"><p><strong>What this plan can and cannot do.</strong> It makes the submission meet ICML's formal requirements and the conditions reviewers usually ask for. It cannot make acceptance certain, and published acceptance rates do not support a 95% chance. For a team with several authors they support about one in four at ICML on the first try, if one author already has a top-venue paper, and about 60 to 85% for some peer-reviewed paper by early 2028. See <a href="#raise">Raise the chances</a>.</p></div>
+  <div class="dates" aria-label="Key dates">
+    <div data-date="2026-11-22"><b>22 Nov 2026</b><span>Go or no-go after the pilot</span></div>
+    <div data-date="2026-12-15"><b>15 Dec 2026</b><span>Experiments frozen</span></div>
+    <div data-date="2027-01-14"><b>14 Jan 2027</b><span>ICML abstract due; author list closes</span></div>
+    <div data-date="2027-01-22"><b>22 Jan 2027</b><span>ICML paper due</span></div>
+    <div data-date="2027-02-23"><b>23 Feb 2027</b><span>First-stage rejection notices</span></div>
+    <div data-date="2027-05-03"><b>3 May 2027</b><span>Final ICML decisions</span></div>
+  </div>
+  <nav aria-label="Contents">
+    <a href="#why">Why this paper</a>
+    <a href="#example">One example</a>
+    <a href="#pitch">Pitch to your manager</a>
+    <a href="#before">Before you start</a>
+    <a href="#data">Prepare the data</a>
+    <a href="#experiment">The experiment</a>
+    <a href="#collect">What to collect</a>
+    <a href="#roadmap">Roadmap</a>
+    <a href="#strength">How strong</a>
+    <a href="#raise">Raise the chances</a>
+    <a href="#outcomes">Expected outcomes</a>
+    <a href="#present">How to present</a>
+    <a href="#rules">Submission rules</a>
+    <a href="#status">Verified and open</a>
+  </nav>
+</header>
+
+<section id="why">
+  <h2>Why this paper</h2>
+  <p>Each part below gives a short explanation in plain words, then something to try. The parts follow the order the paper's introduction should use.</p>
+
+  <h3>The question</h3>
+  <p>An AI helper keeps a store of tips. Each tip has a score that says how often it helped. The scores were earned with one model. When that model is replaced, are the scores still right, and what should you do with them on the day of the change?</p>
+  <div class="widget" id="w-rules">
+    <p class="widget-label">Try it: four things you can do with a score</p>
+    <p class="hint">Tip A earned a score of 0.90 with the old model. Pick a rule to see what score it starts with under the new model. The numbers are made up.</p>
+    <div class="seg" data-group="r">
+      <button type="button" data-value="keep" aria-pressed="true">Keep</button>
+      <button type="button" data-value="wipe" aria-pressed="false">Wipe</button>
+      <button type="button" data-value="discount" aria-pressed="false">Fixed discount</button>
+      <button type="button" data-value="calibrated" aria-pressed="false">Calibrated</button>
+    </div>
+    <div class="ctrl-row">
+      <div class="ctrl-head"><span>Score Tip A starts with</span><output id="w-rules-out">0.90</output></div>
+      <div class="meter" aria-hidden="true"><i id="w-rules-bar" style="width:90%"></i></div>
+    </div>
+    <div class="result" aria-live="polite">
+      <p data-panel="keep">Keep: trust the old score fully. It costs nothing, but it is wrong if the new model uses the tip differently.</p>
+      <p data-panel="wipe" hidden>Wipe: reset the score to the starting value of 0.50. It is safe, but everything learned with the old model is thrown away.</p>
+      <p data-panel="discount" hidden>Fixed discount: trust the old score halfway, the same way at every model change. Here 0.90 becomes 0.70.</p>
+      <p data-panel="calibrated" hidden>Calibrated: first run 16 fresh cases with the new model. If the old scores agree with it, trust them more; if not, less. Here the checks set trust to 0.10, so 0.90 becomes 0.54. It costs 16 fresh cases.</p>
+    </div>
+  </div>
+  <p>The paper measures which of these rules works best across 12 real model changes. A fuller example with four tips is in <a href="#example">The idea in one example</a>.</p>
+
+  <h3>1. A published claim that was never tested</h3>
+  <p>MemRL, accepted at NeurIPS 2026, gave a memory store built with one model to three other models. All three did better. The paper then suggested that the scores themselves carry over to a new model. But it never removed the scores to check, so the gain could come from the stored content alone.</p>
+  <div class="widget" id="w-memrl">
+    <p class="widget-label">Try it: what MemRL measured, and what it left out</p>
+    <div class="seg" data-group="v">
+      <button type="button" data-value="measured" aria-pressed="true">What it measured</button>
+      <button type="button" data-value="missing" aria-pressed="false">What it left out</button>
+    </div>
+    <div class="scroll"><table class="papers">
+      <thead><tr><th>Model given the memory</th><th>Base model</th><th>With the memory store</th><th>Same store, scores removed</th><th>Do old scores still rank right?</th></tr></thead>
+      <tbody>
+        <tr><td>Qwen3-235B</td><td class="num">0.150</td><td class="num">0.531</td><td><span data-panel="measured" class="cell-no">&mdash;</span><span data-panel="missing" class="cell-unread" hidden>Not measured</span></td><td><span data-panel="measured" class="cell-no">&mdash;</span><span data-panel="missing" class="cell-unread" hidden>Not measured</span></td></tr>
+        <tr><td>Gemini-3-flash</td><td class="num">0.347</td><td class="num">0.583</td><td><span data-panel="measured" class="cell-no">&mdash;</span><span data-panel="missing" class="cell-unread" hidden>Not measured</span></td><td><span data-panel="measured" class="cell-no">&mdash;</span><span data-panel="missing" class="cell-unread" hidden>Not measured</span></td></tr>
+        <tr><td>GPT-5.2 (High)</td><td class="num">0.354</td><td class="num">0.571</td><td><span data-panel="measured" class="cell-no">&mdash;</span><span data-panel="missing" class="cell-unread" hidden>Not measured</span></td><td><span data-panel="measured" class="cell-no">&mdash;</span><span data-panel="missing" class="cell-unread" hidden>Not measured</span></td></tr>
+      </tbody>
+    </table></div>
+    <div class="result" aria-live="polite">
+      <p data-panel="measured">Task success on the HLE benchmark, from MemRL's Table 5 (version 2). The memory store was built with Gemini-3-pro. All three models improve. MemRL then wrote that this suggests "the learned utility over memories generalizes beyond any single model's inherent strength".</p>
+      <p data-panel="missing" hidden>MemRL does not say whether the scores were kept or reset. It never ran the store with the scores removed, and never checked whether the old scores still pick the right items for the new model. If the scores-removed column came out as high as the store column, the gain would come from the stored content, not the scores. MemRL's own appendix says its gains on this benchmark stem from memorising answers at run time. These two empty columns are what this paper measures.</p>
+    </div>
+  </div>
+
+  <h3>2. A failing case already in print</h3>
+  <p>CHIME, a September 2026 preprint, moved a memory store between two models and also let each model build its own. In one direction the moved memory barely helped. The paper does not discuss this.</p>
+  <div class="widget" id="w-chime">
+    <p class="widget-label">Try it: switch the direction</p>
+    <div class="seg" data-group="d">
+      <button type="button" data-value="qd" aria-pressed="true">Qwen to DeepSeek</button>
+      <button type="button" data-value="dq" aria-pressed="false">DeepSeek to Qwen</button>
+    </div>
+    <div class="bars" data-panel="qd">
+      <div class="bar-row"><span>No memory</span><div class="meter"><i style="width:75.1%"></i></div><span class="num">30.04</span></div>
+      <div class="bar-row"><span>Memory moved from Qwen</span><div class="meter"><i style="width:77.05%"></i></div><span class="num">30.82</span></div>
+      <div class="bar-row"><span>DeepSeek's own memory</span><div class="meter"><i style="width:90.7%"></i></div><span class="num">36.28</span></div>
+    </div>
+    <div class="bars" data-panel="dq" hidden>
+      <div class="bar-row"><span>Memory moved from DeepSeek</span><div class="meter"><i style="width:66%"></i></div><span class="num">26.40</span></div>
+      <div class="bar-row"><span>Qwen's own memory</span><div class="meter"><i style="width:64.8%"></i></div><span class="num">25.92</span></div>
+    </div>
+    <div class="result" aria-live="polite">
+      <p data-panel="qd">On the tau2-Bench task, moved memory adds 0.78 points, while DeepSeek's own memory adds 6.24. Most of the benefit did not carry over in this direction.</p>
+      <p data-panel="dq" hidden>In the other direction, the moved memory does as well as Qwen's own, slightly better. So whether memory carries over depends on the direction. CHIME reports these cells without error bars, so part of the difference may be chance.</p>
+    </div>
+    <p class="hint">Bars are drawn on a scale from 0 to 40 points.</p>
+  </div>
+
+  <h3>3. The model change is forced</h3>
+  <p>Teams do not choose when to change models. Vendors retire them on a schedule, sometimes with about two months' notice. A team that keeps scored memory beside a rented model will face this decision again and again.</p>
+  <div class="widget" id="w-forced">
+    <p class="widget-label">Try it: how many forced changes</p>
+    <div class="ctrl-row">
+      <div class="ctrl-head"><label for="w-forced-years">How long the helper will run</label><output id="w-forced-years-out" for="w-forced-years">3 years</output></div>
+      <input type="range" id="w-forced-years" min="1" max="5" step="1" value="3">
+    </div>
+    <div class="ctrl-row">
+      <div class="ctrl-head"><label for="w-forced-life">How long a model lasts before retirement</label><output id="w-forced-life-out" for="w-forced-life">14 months</output></div>
+      <input type="range" id="w-forced-life" min="6" max="24" step="1" value="14">
+    </div>
+    <div class="result" aria-live="polite" id="w-forced-res"></div>
+    <p class="hint">Examples read from vendor pages on 15 November 2026 in the first research round; confirm on the vendor's page before quoting. Claude Sonnet 4.5 retires on 30 November 2026. Gemini 2.5 Pro moves to a newer model on 1 December 2026. OpenAI shuts down GPT-5 on 11 December 2026 and the GPT-4o family on 14 January 2027. Recent Claude models lived about 12 to 14 months.</p>
+  </div>
+
+  <h3>4. The effect can reverse with direction</h3>
+  <p>Goyal and Ray, a September 2026 preprint, moved written notes between two open models. One way, the notes helped by 9.91 points. The other way, they hurt by 13.28 points. Averaged together, it looks as if almost nothing happened.</p>
+  <div class="widget" id="w-dir">
+    <p class="widget-label">Try it: one direction, the other, or the average</p>
+    <div class="seg" data-group="g">
+      <button type="button" data-value="one" aria-pressed="true">One direction</button>
+      <button type="button" data-value="two" aria-pressed="false">Other direction</button>
+      <button type="button" data-value="avg" aria-pressed="false">Average of both</button>
+    </div>
+    <div class="bar-row" data-panel="one"><span>Notes moved one way</span><div class="diverge" aria-hidden="true"><i style="left:50%;width:33.03%"></i></div><span class="num">+9.91</span></div>
+    <div class="bar-row" data-panel="two" hidden><span>Notes moved the other way</span><div class="diverge" aria-hidden="true"><i class="neg" style="left:5.73%;width:44.27%"></i></div><span class="num">&minus;13.28</span></div>
+    <div class="bar-row" data-panel="avg" hidden><span>Simple average of the two</span><div class="diverge" aria-hidden="true"><i class="neg" style="left:44.37%;width:5.63%"></i></div><span class="num">&minus;1.69</span></div>
+    <div class="result" aria-live="polite">
+      <p data-panel="one">The moved notes helped the receiving model by 9.91 points.</p>
+      <p data-panel="two" hidden>The same kind of move in the other direction hurt by 13.28 points.</p>
+      <p data-panel="avg" hidden>Averaged, the two give about &minus;1.7 points, which looks as if almost nothing happened. The average hides two large, opposite effects. That is why this paper reports every direction separately.</p>
+    </div>
+    <p class="hint">Bars run from &minus;15 points on the left to +15 on the right. The paper's own pooled test, on a different measure, gave &minus;1.47 points.</p>
+  </div>
+
+  <h3>5. How useful an item is depends on the model reading it</h3>
+  <p>A November 2026 preprint (arXiv 2611.03930) measured, for each stored item and question, whether the item helped, once with each of two different models. The two agreed on 225 of 275 cases. Corrected for agreement by chance, that is a Cohen's kappa of 0.58, which is only moderate. If usefulness were fixed, they would agree almost everywhere. The preprint studies no stored scores, so it supports the idea without answering this paper's question.</p>
+  <div class="widget" id="w-kappa">
+    <p class="widget-label">Try it: where two models disagree</p>
+    <p class="hint">Each square is one item and question. The counts are from the preprint; where the disagreements sit is drawn at random.</p>
+    <div class="seg" data-group="k">
+      <button type="button" data-value="all" aria-pressed="true">All cases</button>
+      <button type="button" data-value="dis" aria-pressed="false">Show disagreements</button>
+    </div>
+    <div class="dots" id="w-kappa-dots" aria-hidden="true"></div>
+    <div class="result"><p>225 of 275 agree (82%). 50 disagree. A kappa of 1 means perfect agreement; 0 means no better than guessing. Here it is 0.58.</p></div>
+  </div>
+
+  <h3>What is still open</h3>
+  <p>Twelve papers come close. Open a paper's name to see what it did. None of the eight read in full checks whether old scores still rank items correctly after a model change, or compares keep, wipe and discount.</p>
+  <div class="widget" id="w-papers">
+    <p class="widget-label">Try it: what each close paper did</p>
+    <div class="seg" data-group="f">
+      <button type="button" data-value="all" aria-pressed="true">All</button>
+      <button type="button" data-value="read" aria-pressed="false">Read in full</button>
+      <button type="button" data-value="unread" aria-pressed="false">Not yet read</button>
+    </div>
+    <div class="scroll"><table class="papers">
+      <thead><tr><th>Paper</th><th>Moves scored memory to a new model</th><th>Compares with the new model's own memory</th><th>Tests if old scores still rank right</th><th>Compares keep, wipe, discount</th></tr></thead>
+      <tbody>
+        <tr data-read="yes"><td><details><summary>MemRL (NeurIPS 2026)</summary><p>Gave a scored memory store built with Gemini-3-pro to three other models and reported task success only. It does not say whether the scores were kept or reset.</p></details></td><td class="cell-yes">Yes</td><td class="cell-no">No</td><td class="cell-no">No</td><td class="cell-no">No</td></tr>
+        <tr data-read="yes"><td><details><summary>RoMeRL (preprint, Aug 2026)</summary><p>A frozen scored memory helped two other models on operating-system and database tasks. Compared only with an agent without it, with no error bars.</p></details></td><td class="cell-yes">Yes</td><td class="cell-no">No</td><td class="cell-no">No</td><td class="cell-no">No</td></tr>
+        <tr data-read="yes"><td><details><summary>CHIME (preprint, Sep 2026)</summary><p>Moved a value-ranked memory both ways between two models. Its check that values track usefulness is only on the model that earned them.</p></details></td><td class="cell-yes">Yes</td><td class="cell-yes">Yes</td><td class="cell-no">Same model only</td><td class="cell-no">No</td></tr>
+        <tr data-read="yes"><td><details><summary>EvoKernel (ICML 2026)</summary><p>Loaded a memory store built with GPT-5.2 into two other models; correctness rose from 6% to 58% and from 4% to 32%. It never says whether the scores came along.</p></details></td><td class="cell-no">Unclear</td><td class="cell-no">No</td><td class="cell-no">No</td><td class="cell-no">No</td></tr>
+        <tr data-read="yes"><td><details><summary>Goyal and Ray (preprint, Sep 2026)</summary><p>Moved memory content, not scores, across one pair of small open models. The effect reversed with direction.</p></details></td><td class="cell-no">Content only</td><td class="cell-yes">Yes</td><td class="cell-no">No</td><td class="cell-no">No</td></tr>
+        <tr data-read="yes"><td><details><summary>MemCollab (preprint, May 2026)</summary><p>Moved memory without scores. On some tasks it left a smaller model worse than with no memory.</p></details></td><td class="cell-no">No scores</td><td class="cell-yes">Yes</td><td class="cell-no">No</td><td class="cell-no">No</td></tr>
+        <tr data-read="yes"><td><details><summary>Memory Transfer Learning (preprint, Apr 2026)</summary><p>Memory from other models helped a little less than a model's own, by 0.3 to 2.8 points, without error bars.</p></details></td><td class="cell-no">No scores</td><td class="cell-yes">Yes</td><td class="cell-no">No</td><td class="cell-no">No</td></tr>
+        <tr data-read="yes"><td><details><summary>arXiv 2611.03930 (preprint, Nov 2026)</summary><p>Measured whether each memory helps under two reader models; they agreed at kappa 0.58. No stored scores and no rule.</p></details></td><td class="cell-no">No scores</td><td class="cell-no">No</td><td class="cell-no">Labels only</td><td class="cell-no">No</td></tr>
+        <tr data-read="no"><td><details><summary>Xia et al. (preprint)</summary><p>From an earlier note: re-ran the evaluation with a different model on the same memory graph, whose weights were trained from reward, and it still beat no memory. Not yet read in full.</p></details></td><td class="cell-unread">Not read</td><td class="cell-unread">Not read</td><td class="cell-unread">Not read</td><td class="cell-unread">Not read</td></tr>
+        <tr data-read="no"><td><details><summary>HEIRS (ICLR 2027 submission)</summary><p>From its abstract and code: after a model change it compares keeping the old skill choice, re-selecting with a small budget, and rebuilding. The carried score is only a tie-breaker; there is no discount rule.</p></details></td><td class="cell-unread">Not read</td><td class="cell-unread">Not read</td><td class="cell-unread">Not read</td><td class="cell-unread">Not read</td></tr>
+        <tr data-read="no"><td><details><summary>"When Can a Skill Library Trust Its Execution Records?" (ICLR 2027 submission)</summary><p>From its abstract: three fresh local trials against pooled records from other models; fresh trials win in two settings and lose in two. The closest by title.</p></details></td><td class="cell-unread">Not read</td><td class="cell-unread">Not read</td><td class="cell-unread">Not read</td><td class="cell-unread">Not read</td></tr>
+        <tr data-read="no"><td><details><summary>"Beyond Semantic Relevance" (ICLR 2027 submission)</summary><p>From its abstract: sets usefulness for each model from that model's own runs. It does not move scores between models.</p></details></td><td class="cell-unread">Not read</td><td class="cell-unread">Not read</td><td class="cell-unread">Not read</td><td class="cell-unread">Not read</td></tr>
+        <tr data-read="ours" class="ours"><td><strong>This paper (planned)</strong></td><td class="cell-yes">Yes</td><td class="cell-yes">Yes</td><td class="cell-yes">Yes</td><td class="cell-yes">Yes</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+
+  <h3>The link to your project</h3>
+  <p>Your tool and the paper deal with the same kind of thing: scores on stored answers, kept beside a model you rent. The paper studies the general case on public data, so the link is thin, and it is true.</p>
+  <div class="widget" id="w-link">
+    <p class="widget-label">Try it: the same four parts in two settings</p>
+    <div class="seg" data-group="l">
+      <button type="button" data-value="tool" aria-pressed="true">In your tool</button>
+      <button type="button" data-value="paper" aria-pressed="false">In the paper</button>
+    </div>
+    <div class="map">
+      <div><b>What is stored</b><span data-panel="tool">Fixes for drive failures, each designed to carry a tally of engineers' verdicts.</span><span data-panel="paper" hidden>Tips and past solutions on public tasks, each with a score from a program's grade or the model's own marking.</span></div>
+      <div><b>The model</b><span data-panel="tool">A rented language model. It changed more than once during development.</span><span data-panel="paper" hidden>Six models from three makers, switched in 12 ways.</span></div>
+      <div><b>Who decides where a case is stored</b><span data-panel="tool">Code, not the model. So the paper predicts your scores stay safe after a change.</span><span data-panel="paper" hidden>In most published systems the model does. That is where scores can go wrong.</span></div>
+      <div><b>What you get</b><span data-panel="tool">A tested rule for the next model change, and an upgrade check.</span><span data-panel="paper" hidden>A measurement of when old scores can be trusted, and a rule for the day of the change.</span></div>
+    </div>
+    <p class="hint">The paper uses no project or customer data.</p>
+  </div>
+</section>
+
+<section id="example">
+  <h2>The idea in one example</h2>
+  <p>A support helper keeps four tips for one kind of failure. Each tip has a score earned with the old model: how often showing it led to a correct answer. When a case arrives, the helper ranks the tips by half relevance and half score, and shows the top one first.</p>
+  <p>Then the vendor retires the old model. Switch the model below and try each rule for the day of the switch. All numbers here are made up to show the idea; the experiment has not been run.</p>
+  <div class="widget" id="tipsim">
+    <p class="widget-label">Try it: what to do with old scores</p>
+    <div class="ctrl-row">
+      <span class="hint">Model running the helper</span>
+      <div class="seg" data-group="model">
+        <button type="button" data-value="old" aria-pressed="false">Old model</button>
+        <button type="button" data-value="new" aria-pressed="true">New model</button>
+      </div>
+    </div>
+    <div class="ctrl-row">
+      <span class="hint">Rule for the old scores</span>
+      <div class="seg" data-group="rule">
+        <button type="button" data-value="keep" aria-pressed="true">Keep</button>
+        <button type="button" data-value="wipe" aria-pressed="false">Wipe</button>
+        <button type="button" data-value="discount" aria-pressed="false">Fixed discount</button>
+        <button type="button" data-value="calibrated" aria-pressed="false">Calibrated</button>
+        <button type="button" data-value="rescore" aria-pressed="false">Re-score all</button>
+      </div>
+    </div>
+    <div class="ctrl-row" id="tipsim-w-row" hidden>
+      <div class="ctrl-head"><label for="tipsim-w">How much to trust the old scores</label><output id="tipsim-w-out" for="tipsim-w">0.50</output></div>
+      <input type="range" id="tipsim-w" min="0" max="1" step="0.05" value="0.5">
+    </div>
+    <p class="hint" id="tipsim-note"></p>
+    <div class="scroll"><table>
+      <thead><tr><th>Tip</th><th>Relevance</th><th>Old score</th><th>Score used</th><th>Helps with this model</th></tr></thead>
+      <tbody id="tipsim-body"></tbody>
+    </table></div>
+    <div class="result" aria-live="polite" id="tipsim-result"></div>
+  </div>
+  <p><strong>What to notice.</strong> With the old model, keeping the scores picks the best tip. With the new model, the same scores push a weak tip to the top. Wiping them falls back on relevance, which is safer but not best. Only re-scoring finds the best tip, and it costs fresh runs on every tip. The paper measures how often each of these happens across 12 real model switches, and how few fresh checks the calibrated rule needs.</p>
+</section>
+
+<section id="pitch">
+  <h2>Pitch to your manager</h2>
+  <p>Ask for a small, staged approval, not for a paper. A one-week pilot on public data is easy to say yes to, and its result decides the rest.</p>
+  <h3>What to say, in about a minute</h3>
+  <div class="plain"><p>"Our tool never trains a model. What it learns is kept as scores beside a language model we rent, and vendors retire those models on short notice. The model under our tool has already changed more than once during development. Published work shows that scored memory still helps after a model is replaced, but nobody has tested whether the scores themselves are still right, or what to do with them. I want to measure that on public benchmarks, with public data and about USD 700 of model calls, and write it up for ICML 2027. It uses no company or customer data. It does not advance the project's sixteen deliverables. What the project gets is a repeatable check to run at every model change, and evidence for or against our decision to keep the model out of the keys. I am asking for one week to run a pilot. On 22 November I will show you five numbers, and we decide together whether to continue."</p></div>
+  <p>Check the vendors' retirement notices on their own pages before you quote any date or notice period.</p>
+  <h3>The order of the conversation</h3>
+  <ol>
+    <li><strong>Start with the ask and its size.</strong> One week, public data, about USD 700, a go or no-go on 22 November.</li>
+    <li><strong>Say the weak points yourself, first.</strong> The link to the product is thin, the paper moves none of the sixteen deliverables, and the scores in the study are not engineers' verdicts. A manager who hears these from you trusts the rest.</li>
+    <li><strong>Say what the organisation gains.</strong> Use the list below.</li>
+    <li><strong>Give the odds plainly and the stopping rule.</strong> About one in four at ICML on the first try if the team includes an author with a prior top-venue paper, and about half that if it does not. About 40% for a top-ranked venue after two tries. About 60 to 85% for some peer-reviewed paper by early 2028. Nobody can offer 95%. The rule: one ICML attempt, one NeurIPS attempt, then the journal TMLR, then an internal report.</li>
+    <li><strong>End with the four decisions you need</strong> (below), and ask who decides each.</li>
+  </ol>
+  <h3>What the organisation gains</h3>
+  <ul>
+    <li><strong>An upgrade check.</strong> The study has to build things the project's own audit already lists as missing: a model field on stored items, a token and cost log, and a check that the tool has not silently fallen back to a stand-in model.</li>
+    <li><strong>A tested answer for the next model change.</strong> Keep, wipe or discount, with evidence, instead of a guess.</li>
+    <li><strong>Standing.</strong> Other hardware companies are publishing agent work on debug and failure analysis. A paper at a machine-learning venue shows competence in the method.</li>
+    <li><strong>A door for the next paper.</strong> One accepted paper makes its authors eligible reviewers, which helps the later paper about the tool itself.</li>
+  </ul>
+  <h3>The hardest questions, and what to answer</h3>
+  <div class="scroll"><table>
+    <thead><tr><th>They ask</th><th>You answer</th></tr></thead>
+    <tbody>
+      <tr><td>"Nothing has run on real data yet. Why a paper?"</td><td>The paper moves none of the deliverables, and I will not present it as progress on them. What closes those gaps waits on a real drive and a real capture. This ask is small and has a gate after one week.</td></tr>
+      <tr><td>"In our product the model does not file anything. Is this about us?"</td><td>Correct for our design. The paper measures the general case and predicts "safe" for ours. That is why I call the link thin.</td></tr>
+      <tr><td>"These are not human verdicts."</td><td>Correct. Scores come from a program's grade and the model's own marking. Verdicts from two or three engineers would be a separate, later study.</td></tr>
+      <tr><td>"What if it is rejected?"</td><td>Rejection at ICML is the planning case. The paper then goes to NeurIPS and to TMLR, and the upgrade check exists either way.</td></tr>
+      <tr><td>"What does it cost?"</td><td>About USD 700 in model calls, measured in the pilot. The real cost is about four weeks of my experiments and five weeks of writing, plus travel if it is presented in person.</td></tr>
+      <tr><td>"What if someone publishes first?"</td><td>It is a real risk. Several groups are close, and decisions on related papers come on 16 December. The defences are a dated prediction file, speed, and a preprint on the day clearance arrives.</td></tr>
+      <tr><td>"Why a machine-learning venue for a storage company?"</td><td>This paper shows the method. The tool's own story belongs at a test or design conference such as ITC or DAC, as a second step.</td></tr>
+    </tbody>
+  </table></div>
+  <h3>The four decisions to ask for</h3>
+  <ol>
+    <li><strong>Publication clearance</strong> for the paper, the experiment code and the use of the company's name, and whether an invention disclosure is wanted first.</li>
+    <li><strong>Confirmation about customer-derived material.</strong> The paper uses none, but the project's hand-over folder contains column names taken from a customer's machine. Ask whether that repository is private before anything is published.</li>
+    <li><strong>The author list.</strong> Who is on it, each with real contribution, and whether one of them has a prior top-venue paper and can review for ICML between 24 February and 16 March 2027. The list closes on 14 January 2027.</li>
+    <li><strong>Resources:</strong> working hours, model keys and budget, and travel.</li>
+  </ol>
+  <h3>What not to say</h3>
+  <ul>
+    <li>"It will be accepted at ICML." Nobody can promise that.</li>
+    <li>"This advances our deliverables." It does not.</li>
+    <li>"We measured human feedback." The study has none.</li>
+    <li>"It uses our data." It must not.</li>
+  </ul>
+  <h3>Practise the conversation</h3>
+  <div class="widget" id="w-flash">
+    <p class="widget-label">Try it: answer the hard questions</p>
+    <p class="hint">Read the question, answer it aloud, then compare with the suggested answer.</p>
+    <div class="flash">
+      <p class="hint" id="w-flash-count">Question 1 of 8</p>
+      <p class="q" id="w-flash-q"></p>
+      <div class="result" id="w-flash-a" hidden><p></p></div>
+      <div class="nav-row">
+        <button type="button" class="btn" id="w-flash-prev">Previous</button>
+        <button type="button" class="btn primary" id="w-flash-show">Show the answer</button>
+        <button type="button" class="btn" id="w-flash-next">Next</button>
+      </div>
+    </div>
+    <div id="w-flash-data" hidden>
+      <div><p>Nothing has run on real data yet. Why a paper?</p><p>The paper moves none of the deliverables, and I will not present it as progress on them. What closes those gaps waits on a real drive and a real capture. This ask is small and has a gate after one week.</p></div>
+      <div><p>In our product the model does not file anything. Is this about us?</p><p>Correct for our design. The paper measures the general case and predicts that our scores stay safe. That is why I call the link thin.</p></div>
+      <div><p>These are not human verdicts.</p><p>Correct. The scores come from a program's grade and the model's own marking. Verdicts from two or three engineers would be a separate, later study.</p></div>
+      <div><p>What if it is rejected?</p><p>Rejection at ICML is the planning case. The paper then goes to NeurIPS and to TMLR, and the upgrade check exists either way.</p></div>
+      <div><p>What does it cost?</p><p>About USD 700 in model calls, measured in the pilot. The real cost is about four weeks of experiments and five weeks of writing, plus travel if it is presented in person.</p></div>
+      <div><p>What if someone publishes first?</p><p>It is a real risk. Several groups are close, and decisions on related papers come on 16 December. The defences are a dated prediction file, speed, and a preprint on the day clearance arrives.</p></div>
+      <div><p>Why a machine-learning venue for a storage company?</p><p>This paper shows the method. The tool's own story belongs at a test or design conference such as ITC or DAC, as a second step.</p></div>
+      <div><p>What are the odds?</p><p>About one in four at ICML on the first try if one author already has a top-venue paper, about 40% for a top-ranked venue after two tries, and about 60 to 85% for some peer-reviewed paper by early 2028. Nobody can offer 95%.</p></div>
+    </div>
+  </div>
+  <div class="widget" id="w-say">
+    <p class="widget-label">Try it: say this instead</p>
+    <p class="hint">Pick a sentence you might be tempted to say.</p>
+    <div class="seg" data-group="s">
+      <button type="button" data-value="accept" aria-pressed="true">"It will be accepted at ICML."</button>
+      <button type="button" data-value="deliver" aria-pressed="false">"This advances our deliverables."</button>
+      <button type="button" data-value="human" aria-pressed="false">"We measured human feedback."</button>
+      <button type="button" data-value="data" aria-pressed="false">"It uses our data."</button>
+      <button type="button" data-value="decide" aria-pressed="false">"It decides whether to upgrade, fine-tune or train."</button>
+    </div>
+    <div class="result" aria-live="polite">
+      <p data-panel="accept"><strong>Say instead:</strong> "Our aim is ICML. Realistically we expect a peer-reviewed paper within about a year of submission, at roughly 60 to 85%." <span class="hint">Nobody can promise a venue, and published rates do not support 95%.</span></p>
+      <p data-panel="deliver" hidden><strong>Say instead:</strong> "It does not move the sixteen deliverables. It gives us an upgrade check and a tested rule for the next model change." <span class="hint">The project's own coverage check shows none of the sixteen fully covered.</span></p>
+      <p data-panel="human" hidden><strong>Say instead:</strong> "The scores come from a program's grade and the model's own marking. Engineers' verdicts would be a later study." <span class="hint">The study has no human feedback.</span></p>
+      <p data-panel="data" hidden><strong>Say instead:</strong> "It uses only public benchmarks, and no company or customer data." <span class="hint">The project files contain customer-derived column names; none may enter the paper.</span></p>
+      <p data-panel="decide" hidden><strong>Say instead:</strong> "When we change models, it tells us whether the experience our agents built up can be trusted, and what it costs to re-earn it." <span class="hint">The paper does not test whether a model meets our needs, or whether to fine-tune or train.</span></p>
+    </div>
+  </div>
+</section>
+
+<section id="before">
+  <h2>Before you start</h2>
+  <p>Finish these in the first week. Ticks are saved in this browser only.</p>
+  <div class="progress-line"><span data-progress-text>0 of 10 done</span><div class="meter" aria-hidden="true"><i data-progress-bar></i></div></div>
+  <ul class="checks">
+    <li><label class="check"><input type="checkbox" id="c1"><span>Written publication clearance from your employer<small>Why: no preprint or submission is possible without it, and it can take weeks.</small></span></label></li>
+    <li><label class="check"><input type="checkbox" id="c2"><span>Confirm in writing that the paper uses public benchmarks only<small>Why: the project's hand-over files contain column names taken from a customer's machine. None of that may enter the paper or its release.</small></span></label></li>
+    <li><label class="check"><input type="checkbox" id="c3"><span>Settle the author list, with real contribution from each author<small>Why: team make-up is the largest measured gap in acceptance, and the list closes on 14 January 2027. Include at least one author with a prior paper at a listed venue if you can.</small></span></label></li>
+    <li><label class="check"><input type="checkbox" id="c4"><span>Check every author's eligibility as a reviewer<small>An author is eligible with one accepted paper at ICML, NeurIPS, ICLR, TMLR, AAAI, IJCAI, KDD, the ACL family or a similar listed venue. Workshop and industry-track papers do not count. Why: with an eligible author the general ICML rate applies and the one-paper limit goes. That author must review between 24 February and 16 March 2027, or the paper can be desk-rejected.</small></span></label></li>
+    <li><label class="check"><input type="checkbox" id="c5"><span>Create a correct OpenReview profile for every author<small>Why: approval can take up to two weeks without an institutional email address.</small></span></label></li>
+    <li><label class="check"><input type="checkbox" id="c6"><span>Read the four unread close papers in a normal browser<small>Xia et al. (arXiv 2511.07800), HEIRS, "When Can a Skill Library Trust Its Execution Records?" and "Beyond Semantic Relevance". Why: if one already compares keep, wipe and discount for numeric scores, the claim must narrow.</small></span></label></li>
+    <li><label class="check"><input type="checkbox" id="c7"><span>Open API accounts and confirm each model on the vendor's own page<small>Anthropic, OpenAI and an OpenAI-compatible host for the Qwen pair, plus an embedding key. Why: model names, prices and retirement dates in this plan come from earlier notes and were not re-checked.</small></span></label></li>
+    <li><label class="check"><input type="checkbox" id="c8"><span>Set a budget of about USD 700, with headroom to USD 1,400<small>Why: the estimate rests on assumed token counts. The pilot measures the real cost on about day 5.</small></span></label></li>
+    <li><label class="check"><input type="checkbox" id="c9"><span>Write a dated prediction file before the first paid run<small>It holds the three predictions, the four primary comparisons, the margins (5 points for a difference, 3 points either way for "no drop") and the go or no-go rule. Why: reviewers trust results that were predicted in advance.</small></span></label></li>
+    <li><label class="check"><input type="checkbox" id="c10"><span>Install Docker and a Python 3.10 environment<small>Why: the released-code leg needs both.</small></span></label></li>
+  </ul>
+</section>
+
+<section id="data">
+  <h2>Prepare the data</h2>
+  <p>Every step below rests on facts checked against the repositories and dataset files on 15 November 2026. The sequence as a whole has not been run end to end, so expect small fixes.</p>
+  <p>Tick each step as you finish it. Ticks are saved in this browser only.</p>
+  <div class="progress-line"><span data-progress-text>0 of 8 done</span><div class="meter" aria-hidden="true"><i data-progress-bar></i></div></div>
+  <ul class="checks">
+    <li><label class="check"><input type="checkbox" id="d1"><span>1. Get the two main streams</span></label></li>
+    <li><label class="check"><input type="checkbox" id="d2"><span>2. Download the BIRD databases</span></label></li>
+    <li><label class="check"><input type="checkbox" id="d3"><span>3. Freeze your own stream order and splits</span></label></li>
+    <li><label class="check"><input type="checkbox" id="d4"><span>4. Connect current models</span></label></li>
+    <li><label class="check"><input type="checkbox" id="d5"><span>5. Write the score layer and the swap-day arms</span></label></li>
+    <li><label class="check"><input type="checkbox" id="d6"><span>6. Set up the released-code leg (MemRL)</span></label></li>
+    <li><label class="check"><input type="checkbox" id="d7"><span>7. Add the frozen score files (RoMeRL)</span></label></li>
+    <li><label class="check"><input type="checkbox" id="d8"><span>8. Record licences before you release anything</span></label></li>
+  </ul>
+  <ol class="steps">
+    <li><div>
+      <h3>Get the two main streams</h3>
+      <p>Clone StreamBench and pin the commit. Load the two streams from Hugging Face and use only the <code>test</code> splits.</p>
+<pre><code>git clone https://github.com/stream-bench/stream-bench
+cd stream-bench &amp;&amp; git checkout cf72f26
+
+# in Python
+from datasets import load_dataset
+ddx  = load_dataset("appier-ai-research/StreamBench", "ddxplus", split="test")
+bird = load_dataset("appier-ai-research/StreamBench", "bird",    split="test")
+assert len(ddx) == 1764 and len(bird) == 1534</code></pre>
+      <p class="why">Why: these are single-call tasks graded by program, so each episode is cheap. DDXPlus is medical diagnosis (label match). BIRD is text-to-SQL (the query is executed). Record the hash of each parquet file.</p>
+    </div></li>
+    <li><div>
+      <h3>Download the BIRD databases</h3>
+      <p>BIRD answers are graded by running SQL on SQLite databases that are not in the Hugging Face files. Edit <code>download_text2sql_data.py</code> so that it runs only the BIRD download, then run it. The file is about 330 MiB compressed.</p>
+<pre><code>python download_text2sql_data.py
+# check: ./data/bird/dev_databases/&lt;db_id&gt;/&lt;db_id&gt;.sqlite exists for every db_id in the stream</code></pre>
+      <p class="why">Why the edit: the script also downloads two other datasets you do not need. If <code>./data/bird</code> already exists from a failed attempt, delete it first, because the script silently keeps a partial unzip. Record the zip's date and hash; the hosted copy is dated June 2024 and may differ slightly from the one behind the original paper's numbers.</p>
+    </div></li>
+    <li><div>
+      <h3>Freeze your own stream order and splits</h3>
+      <p>Shuffle each stream with a seed you record, save the order to a file, and cut it into three parts that share no task: about 600 tasks to earn scores, 200 probe tasks and 300 final test tasks. Make three such orders.</p>
+      <p class="why">Why: the repository sets <code>seed: 42</code> but does not say what it controls, so do not rely on it. The tasks that judge a score must never have helped earn it.</p>
+      <div class="widget" id="w-split">
+        <p class="widget-label">Try it: cut a stream into three parts</p>
+        <div class="seg" data-group="b">
+          <button type="button" data-value="1764" aria-pressed="true">DDXPlus, 1,764 tasks</button>
+          <button type="button" data-value="1534" aria-pressed="false">BIRD, 1,534 tasks</button>
+        </div>
+        <div class="ctrl-row">
+          <div class="ctrl-head"><label for="w-split-b">Build: tasks that earn scores</label><output id="w-split-b-out" for="w-split-b">600</output></div>
+          <input type="range" id="w-split-b" min="200" max="1000" step="50" value="600">
+        </div>
+        <div class="ctrl-row">
+          <div class="ctrl-head"><label for="w-split-p">Probe: tasks that judge scores</label><output id="w-split-p-out" for="w-split-p">200</output></div>
+          <input type="range" id="w-split-p" min="50" max="400" step="25" value="200">
+        </div>
+        <div class="ctrl-row">
+          <div class="ctrl-head"><label for="w-split-t">Test: tasks for final success</label><output id="w-split-t-out" for="w-split-t">300</output></div>
+          <input type="range" id="w-split-t" min="100" max="600" step="50" value="300">
+        </div>
+        <div class="split" aria-hidden="true"><i class="b"></i><i class="p"></i><i class="t"></i><i class="u"></i></div>
+        <div class="legend"><span style="--sw: var(--accent)">Build</span><span style="--sw: var(--warn)">Probe</span><span style="--sw: var(--ok)">Test</span><span style="--sw: var(--code-bg)">Not used</span></div>
+        <div class="result" aria-live="polite" id="w-split-res"></div>
+      </div>
+    </div></li>
+    <li><div>
+      <h3>Connect current models</h3>
+      <p>The models that ship in StreamBench's configs are retired, so every config needs a model edit. An OpenAI-compatible host can be reached through the <code>CUSTOM_API_URL</code> setting. Expect to patch the OpenAI backend, which hard-codes <code>logprobs=True</code>.</p>
+      <p class="why">Why: you need six models from three makers through one harness. Register your memory agent as a subclass of <code>Agent</code> in <code>stream_bench/agents/base.py</code> and add it to <code>stream_bench/agents/__init__.py</code>.</p>
+    </div></li>
+    <li><div>
+      <h3>Write the score layer and the swap-day arms</h3>
+      <p>None of the four public codebases has a reset or discount function. Write a thin layer (about 300 lines) with two score rules: a MemRL-style value update, and ACE-style helpful and harmful counters. Then write the arms yourself: keep, wipe, fixed discount, calibrated discount.</p>
+      <p class="why">Why: this is the core of the study. Two details matter. "Wipe" means reset to the rule's starting value (0.5 in MemRL's configuration for these tasks), not zero. ACE's counters do not rank retrieval in ACE's own code, so define how counters rank items (for example helpful minus harmful) and put that definition in the prediction file.</p>
+    </div></li>
+    <li><div>
+      <h3>Set up the released-code leg (MemRL)</h3>
+<pre><code>git clone https://github.com/MemTensor/MemRL
+cd MemRL &amp;&amp; git checkout c1b322c
+conda create -n memrl python=3.10 &amp;&amp; conda activate memrl
+pip install -r requirements.txt
+# start Docker: the stock mysql image, and build the local-os/default image
+cp configs/rl_llb_config.yaml configs/rl_llb_config.local.yaml   # set keys and models here
+python run/run_llb.py</code></pre>
+      <p>Use the operating-system tasks (500 tasks: 350 train, 150 validation). To build an arm, copy the saved snapshot, edit <code>q_value</code> in <code>textual_memory.json</code>, then delete the whole <code>local_cache/</code> directory.</p>
+      <p class="why">Why: a second ground that runs someone else's released code answers the objection that the effect is an artefact of your own layer. Each score is stored in three places and the caches override file edits, which is why the cache directory must go. The database tasks are near ceiling for current models, so they cannot show an effect. All models must be reached through an OpenAI-compatible route, and an embedding endpoint is required; keep the embedding model fixed across old and new model.</p>
+      <div class="widget" id="w-stores">
+        <p class="widget-label">Try it: wipe a score the right way</p>
+        <p class="hint">You want to wipe Tip A from 0.90 to the starting value of 0.50. MemRL keeps the score in three places and reads the caches first.</p>
+        <div class="seg" data-group="m">
+          <button type="button" data-value="file" aria-pressed="true">Edit the memory file only</button>
+          <button type="button" data-value="qcache" aria-pressed="false">Edit the file, delete q_cache.json</button>
+          <button type="button" data-value="folder" aria-pressed="false">Edit the file, delete the whole local_cache folder</button>
+        </div>
+        <div class="stores">
+          <div id="w-st-q"><code>local_cache/q_cache.json</code><b>0.90</b><span>Read first</span></div>
+          <div id="w-st-m"><code>local_cache/mem_cache.json</code><b>0.90</b><span>Read if q_cache has no entry</span></div>
+          <div id="w-st-f"><code>textual_memory.json</code><b>0.50</b><span>Read when both caches are gone</span></div>
+        </div>
+        <div class="result" aria-live="polite">
+          <p data-panel="file"><span class="chip open">Wrong</span> The code reads q_cache first and still finds 0.90. Your edit is ignored.</p>
+          <p data-panel="qcache" hidden><span class="chip open">Wrong</span> With q_cache gone, the code falls back to mem_cache, which still says 0.90. Your edit is ignored.</p>
+          <p data-panel="folder" hidden><span class="chip ok">Right</span> With both caches gone, the code reads the memory file and finds 0.50.</p>
+        </div>
+      </div>
+    </div></li>
+    <li><div>
+      <h3>Add the frozen score files (RoMeRL)</h3>
+      <p>Clone <code>github.com/YOUNG-fnxm/RoMeRL</code> and check the two checkpoints against the hashes in <code>manifest.json</code>. Build arms by editing <code>q_cache.json.gz</code>. For a wipe, set values to the starting value; do not delete keys.</p>
+      <p class="why">Why: it is a nearly free extra test on scores another group trained. Two limits: the release is read-only (no learning code), and the repository does not say which model produced the scores. Confirm that from the paper before calling it the "old model". The files need the same embedding model that built them (text-embedding-3-large). Label edited files as derived.</p>
+    </div></li>
+    <li><div>
+      <h3>Record licences before you release anything</h3>
+      <p>StreamBench's code is Apache-2.0, MemRL and RoMeRL are MIT. The StreamBench data on Hugging Face and LifelongAgentBench declare no licence.</p>
+      <p class="why">Why: the ICML contribution type asks authors to address licensing and provenance. Release your scripts, prompts, score files and outcome tables, and point to the original data sources, until the upstream terms for DDXPlus and BIRD are confirmed.</p>
+    </div></li>
+  </ol>
+</section>
+
+<section id="experiment">
+  <h2>The experiment</h2>
+  <p>Open a term to see what it means.</p>
+  <div class="terms">
+    <details><summary>Memory item and score</summary><p>A stored tip, example or past solution, with a number that says how often showing it helped. MemRL keeps one number per item, called a Q-value. ACE keeps two counters per item, helpful and harmful.</p></details>
+    <details><summary>Ordered swap pair</summary><p>An old model and the new model that replaces it. Haiku 4.5 to Haiku 5.5 and Haiku 5.5 to Haiku 4.5 are two different pairs, because earlier work found the effect can reverse with direction.</p></details>
+    <details><summary>Probe table</summary><p>For each test case, the new model is run once with each candidate item shown on its own, and every answer is graded by a program. The table then holds the true outcome of every choice, so any rule can be scored by looking up the item it would pick.</p></details>
+    <details><summary>Noise floor</summary><p>How much the results move when nothing has changed: a model swapped onto itself, or identical runs repeated. A drop counts only if it is larger than this.</p></details>
+    <details><summary>Equivalence test</summary><p>A test that shows two results are within a set margin, here 3 points. It turns "no drop" into a claim you can defend, instead of a failure to find a difference.</p></details>
+    <details><summary>Power prior (the calibrated discount)</summary><p>A standard statistical way to combine old and new evidence: old evidence counts with a weight between 0 and 1. The calibrated rule chooses that weight from a few fresh checks. It is a known method, so the paper does not claim it as new.</p></details>
+    <details><summary>Bootstrap interval</summary><p>An error bar made by re-sampling the test cases many times. It shows how far a number could move by chance.</p></details>
+  </div>
+  <h3>Models</h3>
+  <p>Six models in three old-to-new pairs, one from each of three makers, with an open-weight pair that others can re-run after the closed models retire. The planned pairs are Claude Haiku 4.5 to Haiku 5.5, GPT-5.6-luna to GPT-6-luna, and Qwen3.5-27B to Qwen3.8-27B. That gives twelve ordered swaps: three upgrades, three downgrades as a control, and six cross-maker swaps.</p>
+  <h3>The probe table</h3>
+  <p>For every probe task and each of its top four candidate memory items, run the new model twice with exactly that one item shown, and once with no item. Grade by program. Because the table holds the outcome of every candidate, the choice any rule would make can be scored by look-up, with no further model calls.</p>
+  <h3>The seven arms</h3>
+  <div class="scroll"><table>
+    <thead><tr><th>Arm</th><th>Memory content</th><th>Scores</th></tr></thead>
+    <tbody>
+      <tr><td>No memory</td><td>None</td><td>None</td></tr>
+      <tr><td>Own</td><td>The new model's own bank, built on the same stream</td><td>The new model's own</td></tr>
+      <tr><td>Keep</td><td>The old model's bank</td><td>Unchanged</td></tr>
+      <tr><td>Wipe</td><td>The old model's bank</td><td>Reset to the starting value, so ranking is by similarity alone</td></tr>
+      <tr><td>Fixed discount</td><td>The old model's bank</td><td>Weighted by 0.5, with a sweep from 0.1 to 0.9</td></tr>
+      <tr><td>Calibrated discount</td><td>The old model's bank</td><td>Weight chosen from 8, 16, 32 or 64 fresh checks</td></tr>
+      <tr><td>Re-scored (ceiling)</td><td>The old model's bank</td><td>Earned again by the new model</td></tr>
+    </tbody>
+  </table></div>
+  <p>The memory content is identical in the last five arms. That separates "the content transfers" from "the scores transfer", which earlier papers could not do.</p>
+  <h3>What you measure</h3>
+  <ul>
+    <li><strong>Retained validity (the headline).</strong> Among pairs of candidates whose outcomes differ, how often did the one with the higher carried score do better? 0.5 is chance. Measure it at home (old scores, old model) and after the swap (old scores, new model), and report the ratio.</li>
+    <li><strong>First-shown success:</strong> the success rate of the item each arm would show first.</li>
+    <li><strong>Task success</strong> on the final test tasks.</li>
+    <li><strong>Recovery:</strong> the number of fresh episodes needed to reach 95% of the ceiling.</li>
+    <li><strong>Cost</strong> per arm in calls, tokens and dollars.</li>
+  </ul>
+  <div class="widget" id="rv">
+    <p class="widget-label">Try it: retained validity</p>
+    <p class="hint">Take pairs of candidate tips whose outcomes differ. How often does the tip with the higher old score do better? 50% is a coin toss.</p>
+    <div class="ctrl-row">
+      <div class="ctrl-head"><label for="rv-home">With the old model (at home)</label><output id="rv-home-out" for="rv-home">75%</output></div>
+      <input type="range" id="rv-home" min="51" max="100" step="1" value="75">
+    </div>
+    <div class="ctrl-row">
+      <div class="ctrl-head"><label for="rv-swap">With the new model (after the switch)</label><output id="rv-swap-out" for="rv-swap">60%</output></div>
+      <input type="range" id="rv-swap" min="20" max="100" step="1" value="60">
+    </div>
+    <div class="meter" aria-hidden="true"><i id="rv-bar"></i></div>
+    <div class="result" aria-live="polite" id="rv-result"></div>
+  </div>
+  <h3>Controls and statistics</h3>
+  <ul>
+    <li>A self-swap of each model onto itself, repeat runs of identical cells, and two independently built banks of the same model set the noise floor. Claim a drop only if it exceeds the self-swap drop.</li>
+    <li>Report every result per ordered pair. Never rely on a pooled average.</li>
+    <li>Use paired comparisons on the same probe tasks, intervals from a bootstrap over tasks and stream orders, and a correction across the four primary comparisons.</li>
+    <li>Test "no drop" as equivalence within 3 points. A failed difference test is not evidence of no drop.</li>
+    <li>Prior cross-model margins are 0.3 to 5 points, so expect small effects. That is why the headline is measured at item level.</li>
+    <li>Repeat a subset of pairs with a second prompt wording. Reviewers of accepted measurement papers criticised reliance on a single prompt.</li>
+  </ul>
+  <h3>Three predictions to register</h3>
+  <ol>
+    <li>Retained validity rises with the agreement between the two models' outcomes on the same task-and-item cells.</li>
+    <li>The gap between keep and wipe shrinks as the new model's no-memory success rises.</li>
+    <li>Scores assigned by the model itself (counters) lose more validity than scores earned from a program's reward (values).</li>
+  </ol>
+  <div class="widget" id="w-pred">
+    <p class="widget-label">Try it: what each prediction means</p>
+    <div class="seg" data-group="p">
+      <button type="button" data-value="p1" aria-pressed="true">1. Agreement</button>
+      <button type="button" data-value="p2" aria-pressed="false">2. Stronger new model</button>
+      <button type="button" data-value="p3" aria-pressed="false">3. Who gave the score</button>
+    </div>
+    <div class="result" aria-live="polite">
+      <div data-panel="p1"><p><strong>In plain words:</strong> if the two models succeed and fail on the same cases, old scores should still work.</p><p><strong>How it is tested:</strong> for each of the 12 switches, measure how often the two models get the same result on the same case and item, then check whether that predicts retained validity.</p><p><strong>Why it matters:</strong> a team could run a small agreement check before a switch and know in advance whether to keep its scores.</p></div>
+      <div data-panel="p2" hidden><p><strong>In plain words:</strong> if the new model is already good without memory, the choice of rule matters less.</p><p><strong>How it is tested:</strong> compare the gap between keep and wipe with the new model's success rate when no memory is shown.</p><p><strong>Why it matters:</strong> it tells teams when the decision is worth any effort.</p></div>
+      <div data-panel="p3" hidden><p><strong>In plain words:</strong> scores the model gave itself should survive a switch worse than scores earned from a program's grade.</p><p><strong>How it is tested:</strong> compare retained validity for ACE-style counters with MemRL-style values on the same switches.</p><p><strong>Why it matters:</strong> it gives a practical rule with a reason: trust graded scores more than self-assigned ones.</p></div>
+    </div>
+    <p class="hint">Each prediction goes into the dated prediction file before the first paid run, and is reported whether it passes or fails.</p>
+  </div>
+</section>
+
+<section id="collect">
+  <h2>What to collect</h2>
+  <p>Start on day one. Several models retire soon, so runs cannot be repeated later, and the release package is built from these files.</p>
+  <div class="scroll"><table>
+    <thead><tr><th>Collect</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td>Every prompt and every raw model answer</td><td>Lets anyone re-score the study after the models are gone</td></tr>
+      <tr><td>Exact model ID, date and time of every call</td><td>A model name can point to different versions over time</td></tr>
+      <tr><td>Seeds, stream orders and the three-way split files</td><td>Makes the split and order reproducible</td></tr>
+      <tr><td>Tokens and cost of every call</td><td>Builds the cost table reviewers ask for</td></tr>
+      <tr><td>Score files of every memory bank, before and after each swap</td><td>They are the object of study</td></tr>
+      <tr><td>The probe tables</td><td>Every arm and every figure is computed from them</td></tr>
+      <tr><td>The five pilot numbers and the dated prediction file</td><td>Shows the gate and the predictions came before the results</td></tr>
+      <tr><td>Hashes and download dates of all datasets, commit IDs of all code</td><td>Provenance, which the ICML type asks for</td></tr>
+      <tr><td>A list of every place an AI tool helped</td><td>ICML 2027 requires an AI disclosure statement</td></tr>
+    </tbody>
+  </table></div>
+  <div class="widget" id="w-rec">
+    <p class="widget-label">Try it: one call, as it should be logged</p>
+    <p class="hint">Click a field to see why it is kept. The values are made up.</p>
+    <div class="rec">{
+  <button type="button" data-f="call_id">&quot;call_id&quot;</button>: &quot;ddx-o2-probe-000417-A-r1&quot;,
+  <button type="button" data-f="model_id">&quot;model_id&quot;</button>: &quot;claude-haiku-5-5&quot;,
+  <button type="button" data-f="called_at">&quot;called_at&quot;</button>: &quot;2026-11-24T10:42:07Z&quot;,
+  <button type="button" data-f="stream">&quot;stream&quot;</button>: &quot;ddxplus&quot;,
+  <button type="button" data-f="order_seed">&quot;order_seed&quot;</button>: 2,
+  <button type="button" data-f="part">&quot;part&quot;</button>: &quot;probe&quot;,
+  <button type="button" data-f="arm">&quot;arm&quot;</button>: &quot;probe-single-item&quot;,
+  <button type="button" data-f="item_shown">&quot;item_shown&quot;</button>: &quot;mem-00183&quot;,
+  <button type="button" data-f="prompt">&quot;prompt_sha256&quot;</button>: &quot;9f2c&hellip;e41a&quot;,
+  <button type="button" data-f="answer">&quot;answer&quot;</button>: &quot;Pneumonia&quot;,
+  <button type="button" data-f="correct">&quot;correct&quot;</button>: true,
+  <button type="button" data-f="cost">&quot;tokens_in&quot;</button>: 2412,
+  <button type="button" data-f="cost">&quot;tokens_out&quot;</button>: 6,
+  <button type="button" data-f="cost">&quot;cost_usd&quot;</button>: 0.00024
+}</div>
+    <div class="result" aria-live="polite">
+      <p data-fp="call_id" hidden><strong>call_id:</strong> a unique name for the call. Every number in the paper can be traced back to the raw answer it came from.</p>
+      <p data-fp="model_id" hidden><strong>model_id:</strong> the exact model version the API reports. A model name can point to different versions over time, and closed models retire.</p>
+      <p data-fp="called_at" hidden><strong>called_at:</strong> when the call ran. It shows which model version was live at the time.</p>
+      <p data-fp="stream" hidden><strong>stream:</strong> which public benchmark the task came from.</p>
+      <p data-fp="order_seed" hidden><strong>order_seed:</strong> which of the three shuffled orders was used, so the order can be rebuilt exactly.</p>
+      <p data-fp="part" hidden><strong>part:</strong> build, probe or test. It proves no task was used in two parts.</p>
+      <p data-fp="arm" hidden><strong>arm:</strong> which rule or probe the call belongs to.</p>
+      <p data-fp="item_shown" hidden><strong>item_shown:</strong> which memory item was in the prompt, or none. The probe table is built from these.</p>
+      <p data-fp="prompt" hidden><strong>prompt_sha256:</strong> a fingerprint of the exact prompt. The full prompt is stored separately, so anyone can check nothing changed.</p>
+      <p data-fp="answer" hidden><strong>answer:</strong> the raw answer, unchanged, so anyone can grade it again later.</p>
+      <p data-fp="correct" hidden><strong>correct:</strong> the grade from the program: a label match for DDXPlus, the result of running the SQL for BIRD.</p>
+      <p data-fp="cost" hidden><strong>tokens and cost:</strong> what the call used and cost, for the cost table reviewers ask for.</p>
+    </div>
+  </div>
+</section>
+
+<section id="roadmap">
+  <h2>Roadmap</h2>
+  <div class="scroll"><table>
+    <thead><tr><th>Dates</th><th>Work</th><th>What exists at the end</th></tr></thead>
+    <tbody>
+      <tr><td>15&ndash;22&nbsp;Nov</td><td>The ten items in "Before you start". Data steps 1 to 5. Pilot on DDXPlus with three models, 300 build tasks and 100 probe tasks</td><td>Five pilot numbers. <strong>Go or no-go on 22 November</strong></td></tr>
+      <tr><td>23&ndash;29&nbsp;Nov</td><td>Full build and home probes on DDXPlus for six models and three stream orders. Finish all calls to the oldest model first. Set up the MemRL leg</td><td>Home-validity table; first three cross pairs</td></tr>
+      <tr><td>30&nbsp;Nov&ndash;6&nbsp;Dec</td><td>All twelve pairs on DDXPlus. Build and probes on BIRD. Score every arm offline</td><td>Main table and figure on two benchmarks (the minimum bar)</td></tr>
+      <tr><td>7&ndash;15&nbsp;Dec</td><td>Live check on four pairs. MemRL leg on two pairs. RoMeRL score files. The three prediction analyses. <strong>Freeze on 15 December</strong></td><td>The target bar, if the effect is there</td></tr>
+      <tr><td>16&ndash;31&nbsp;Dec</td><td>Read the ICLR 2027 decisions (16 December). Choose the route from the result. Draft methods and results. Build the release package</td><td>Technical draft</td></tr>
+      <tr><td>1&ndash;7&nbsp;Jan</td><td>Abstract, introduction and first figure. One outside reader</td><td>The first page</td></tr>
+      <tr><td>8&ndash;14&nbsp;Jan</td><td>Related work, limits, disclosure statements. Fix the author list. Abstract in on 14 January</td><td>Abstract submitted</td></tr>
+      <tr><td>15&ndash;22&nbsp;Jan</td><td>Check every reference by hand. Appendix. Anonymised repository. Submit on 22 January</td><td>Submission</td></tr>
+    </tbody>
+  </table></div>
+  <div class="widget" id="w-when">
+    <p class="widget-label">Try it: where should we be on a given day?</p>
+    <div class="ctrl-row">
+      <div class="ctrl-head"><label for="w-when-day">Date</label><output id="w-when-out" for="w-when-day"></output></div>
+      <input type="range" id="w-when-day" min="0" max="68" step="1" value="0">
+    </div>
+    <div class="meter" aria-hidden="true"><i id="w-when-bar"></i></div>
+    <div class="result" aria-live="polite" id="w-when-res"></div>
+    <p class="hint">The slider starts at today's date when today falls inside the plan.</p>
+  </div>
+  <h3 id="gate">The go or no-go on 22 November</h3>
+  <p>Run the full study only if all five hold in the pilot:</p>
+  <ol>
+    <li>The old model with its own memory beats no memory by at least 5 points.</li>
+    <li>Scores mean something at home: concordance of at least 0.60 for at least one score type.</li>
+    <li>Repeat runs of identical cells disagree less than 15% of the time.</li>
+    <li>At least 150 items have five or more visits, and at least 30% of probe tasks have candidates whose outcomes differ.</li>
+    <li>Measured cost per 1,000 calls is within twice the estimate.</li>
+  </ol>
+  <div class="widget" id="gate-check">
+    <p class="widget-label">Try it: enter the pilot numbers</p>
+    <p class="hint">The values below are examples. Replace them with your pilot results on 22 November.</p>
+    <div class="form-grid">
+      <label for="g-gain">Memory gain over no memory (points)<input type="number" id="g-gain" step="0.1" value="7"></label>
+      <label for="g-conc">Home concordance (0 to 1)<input type="number" id="g-conc" step="0.01" min="0" max="1" value="0.64"></label>
+      <label for="g-conclow">Lower bound of that concordance<input type="number" id="g-conclow" step="0.01" min="0" max="1" value="0.58"></label>
+      <label for="g-dis">Repeat disagreement (%)<input type="number" id="g-dis" step="0.1" min="0" max="100" value="11"></label>
+      <label for="g-items">Items with five or more visits<input type="number" id="g-items" step="1" min="0" value="180"></label>
+      <label for="g-diff">Probe tasks with differing outcomes (%)<input type="number" id="g-diff" step="1" min="0" max="100" value="35"></label>
+      <label for="g-cost">Measured cost divided by estimated cost<input type="number" id="g-cost" step="0.1" min="0" value="1.3"></label>
+    </div>
+    <label class="inline-check" for="g-ci"><input type="checkbox" id="g-ci" checked> The interval for the memory gain excludes zero</label>
+    <div class="result" aria-live="polite" id="gate-result"></div>
+  </div>
+  <p>If memory does not help on DDXPlus, switch benchmark before spending more. If scores are no better than chance at home, raise exploration in the build and re-run the pilot for two days. If the gate fails twice, the January attempt with this idea is over; write up the finding that scores are weak even before a swap, or move to the runner-up idea on a later timetable.</p>
+  <p>If the schedule slips by more than three days, cut the MemRL leg down to the RoMeRL score files and keep the two-benchmark grid whole.</p>
+</section>
+
+<section id="strength">
+  <h2>How strong the results must be</h2>
+  <p>No venue publishes such a bar. These two are a judgement built from the plan's registered margins and the effect sizes in earlier papers.</p>
+  <div class="scroll"><table>
+    <thead><tr><th></th><th>Minimum (enough for TMLR)</th><th>Target (competitive at ICML)</th></tr></thead>
+    <tbody>
+      <tr><td>Coverage</td><td>Two public benchmarks, six models, twelve ordered pairs, all seven arms</td><td>The same, plus the released-code leg and both score types</td></tr>
+      <tr><td>Scores at home</td><td>Concordance of at least 0.60 for one score type</td><td>For both score types</td></tr>
+      <tr><td>The swap effect</td><td>Measured per pair with intervals and the noise floor, whatever its size</td><td>A drop beyond the noise floor in a clear subset of pairs, or a tight "no drop" within 3 points</td></tr>
+      <tr><td>Explanation</td><td>The three predictions reported, pass or fail</td><td>At least one prediction holds across the twelve pairs, so the paper says which swaps break and why</td></tr>
+      <tr><td>The rule</td><td>Keep, wipe and discount compared</td><td>The calibrated discount recovers most of the ceiling from a stated small number of fresh checks</td></tr>
+      <tr><td>Evidence quality</td><td>Prediction file, paired tests, intervals, cost table, full release</td><td>The same</td></tr>
+    </tbody>
+  </table></div>
+  <div class="widget" id="w-bar">
+    <p class="widget-label">Try it: check results against the bars</p>
+    <p class="hint">Fill in what your results have. The values below are an example that meets the minimum but not the target.</p>
+    <div class="form-grid">
+      <label for="b-bench">Public benchmarks<input type="number" id="b-bench" min="0" step="1" value="2"></label>
+      <label for="b-models">Models<input type="number" id="b-models" min="0" step="1" value="6"></label>
+      <label for="b-pairs">Ordered swap pairs<input type="number" id="b-pairs" min="0" step="1" value="12"></label>
+      <label for="b-cv">Home concordance, value scores<input type="number" id="b-cv" min="0" max="1" step="0.01" value="0.66"></label>
+      <label for="b-cc">Home concordance, counters<input type="number" id="b-cc" min="0" max="1" step="0.01" value="0.55"></label>
+    </div>
+    <div class="checkcol">
+      <label class="inline-check" for="b-arms"><input type="checkbox" id="b-arms" checked> All seven arms run</label>
+      <label class="inline-check" for="b-perpair"><input type="checkbox" id="b-perpair" checked> Swap effect measured per pair, with intervals and the noise floor</label>
+      <label class="inline-check" for="b-kwd"><input type="checkbox" id="b-kwd" checked> Keep, wipe and discount compared</label>
+      <label class="inline-check" for="b-pred"><input type="checkbox" id="b-pred" checked> The three predictions reported, pass or fail</label>
+      <label class="inline-check" for="b-evid"><input type="checkbox" id="b-evid" checked> Prediction file, paired tests, intervals, cost table and full release</label>
+      <label class="inline-check" for="b-code"><input type="checkbox" id="b-code"> Released-code leg done</label>
+      <label class="inline-check" for="b-clear"><input type="checkbox" id="b-clear"> A drop beyond the noise floor in a clear subset of pairs, or a tight no-drop result</label>
+      <label class="inline-check" for="b-holds"><input type="checkbox" id="b-holds"> At least one prediction holds across the twelve pairs</label>
+      <label class="inline-check" for="b-calib"><input type="checkbox" id="b-calib"> The calibrated discount recovers most of the ceiling from a few fresh checks</label>
+    </div>
+    <div class="result" aria-live="polite" id="w-bar-res"></div>
+  </div>
+</section>
+
+<section id="raise">
+  <h2>Raise the chances</h2>
+  <div class="plain"><p><strong>An open gap is needed, but it does not make acceptance likely by itself.</strong> ICML reviewers score four things: soundness, presentation, significance and originality. The open gap helps originality and significance. Soundness and presentation come from how well the work is done and written, and committees disagree on about a quarter of papers. That is why even a strong paper with a real gap faces about one in four at ICML on a single try.</p></div>
+  <h3>What the published rates support</h3>
+  <p>A 95% chance of acceptance is not supported by any published rate. These are group rates for all papers of a kind, not a forecast for this one.</p>
+  <div class="scroll"><table>
+    <thead><tr><th>Outcome</th><th>Chance</th><th>Basis</th></tr></thead>
+    <tbody>
+      <tr><td>ICML 2027, first try, team with an eligible reviewer</td><td>About 27%</td><td>ICML accepted 26.6% in 2026</td></tr>
+      <tr><td>ICML 2027, first try, no eligible reviewer on the team</td><td>About 11 to 15%</td><td>At ICLR 2026 such papers were accepted at about half the usual rate</td></tr>
+      <tr><td>A top-ranked venue after ICML and NeurIPS 2027</td><td>About 39 to 45%</td><td>Two attempts at about one in four each; a rejected paper does somewhat worse on its next try</td></tr>
+      <tr><td>Some peer-reviewed venue after ICML, NeurIPS and the journal TMLR, by about January 2028</td><td>57 to 84%</td><td>TMLR accepted 46.3% of all submissions and 70.6% of fully reviewed ones in 2025</td></tr>
+      <tr><td>95% somewhere</td><td>Not supported</td><td>Reached on paper only after seven to nine attempts in a row, into 2029 or 2030, using second-tier conferences and a general-science journal, and only if every attempt is independent of the last</td></tr>
+    </tbody>
+  </table></div>
+  <p>For a paper that meets every condition on this page, the researcher's own judgement is 80 to 92% for some peer-reviewed venue by January 2028. That is a judgement, not a published figure.</p>
+  <div class="widget" id="ladder">
+    <p class="widget-label">Try it: the venue ladder</p>
+    <p class="hint">Tick the venues to try, in order. Each line shows the chance of acceptance somewhere by the end of that step, first if each try is independent, then on the cautious reading. The red mark on the bars is 95%.</p>
+    <div class="ctrl-row">
+      <span class="hint">Does one author already have a paper at a listed venue?</span>
+      <div class="seg" data-group="elig">
+        <button type="button" data-value="yes" aria-pressed="true">Yes</button>
+        <button type="button" data-value="no" aria-pressed="false">No</button>
+      </div>
+    </div>
+    <div class="ctrl-row">
+      <span class="hint">TMLR rate to use</span>
+      <div class="seg" data-group="tmlr">
+        <button type="button" data-value="70.6" aria-pressed="true">Fully reviewed papers, 70.6%</button>
+        <button type="button" data-value="46.3" aria-pressed="false">All submissions, 46.3%</button>
+      </div>
+    </div>
+    <ul class="ladder" id="ladder-list"></ul>
+    <div class="ctrl-row">
+      <div class="ctrl-head"><span>If each try is independent</span><output id="lad-ind-out">0%</output></div>
+      <div class="meter"><i id="lad-ind"></i><span class="mark" style="left:95%"></span></div>
+    </div>
+    <div class="ctrl-row">
+      <div class="ctrl-head"><span>Cautious: a rejected paper does worse next time</span><output id="lad-cau-out">0%</output></div>
+      <div class="meter"><i id="lad-cau"></i><span class="mark" style="left:95%"></span></div>
+    </div>
+    <div class="result" aria-live="polite" id="ladder-result"></div>
+    <p class="hint">Group rates from each venue's published figures, applied in order. Without an eligible author, ICML uses 13%, about half its usual rate, following ICLR 2026. The cautious reading takes later tries at about two-thirds of the usual rate, following the NeurIPS 2021 experiment. These are not forecasts for this paper.</p>
+  </div>
+  <h3>How to say it</h3>
+  <div class="plain"><p>"Our aim is ICML. The realistic expectation is a peer-reviewed paper within about a year of submission, at roughly 60 to 85%. We raise those odds with ten specific actions. We cannot promise any single venue, and nobody can offer 95%."</p></div>
+  <h3>Ten actions, ranked</h3>
+  <p>The ranking is a judgement. The numbers are differences between groups of papers, not proven causes.</p>
+  <ol>
+    <li><strong>Build the author list around real contributors, including one experienced author.</strong> Check each author's eligibility, fix every OpenReview profile before 14 January, and protect the reviewing author's time from 24 February to 16 March. <span class="chip ok">Measured</span> At ICLR 2026, 8.8% of one-author submissions were accepted against 24 to 26% for three to five authors (one year of data).</li>
+    <li><strong>Write the first page for the first-stage reader:</strong> the question, what was measured, the headline per pair, the rule, the limits. No format, anonymity or disclosure fault. Re-read the ICML pages in late November, when process updates are due. <span class="chip">Official</span></li>
+    <li><strong>Close the gaps reviewers name before you submit:</strong> a second prompt wording, the no-memory arm, a cost table, the number of items per pair, the noise floor. <span class="chip ok">Measured</span> In a labelled sample of 500 rejected ICLR papers, 48% failed on execution alone.</li>
+    <li><strong>Claim only what the intervals support,</strong> per pair, with limits up front. <span class="chip">Official</span> The ICML form says authors "should be rewarded rather than punished for being up front about the limitations".</li>
+    <li><strong>Release code, prompts, raw answers and probe tables at submission.</strong> <span class="chip ok">Measured</span> At ICLR from 2017 to 2025, 44% of papers with code or data were accepted against 33% without.</li>
+    <li><strong>Prepare the rebuttal in advance</strong> and answer every reviewer with numbers. <span class="chip ok">Measured</span> At ICLR 2024 and 2025, 17 to 23% of reviews raised their score after replies and 1% lowered it.</li>
+    <li><strong>Make it easy to read:</strong> short sentences, a figure and main table that stand alone, exact prompts easy to find, written by the authors. <span class="chip">Official</span> Presentation is one of four scored dimensions.</li>
+    <li><strong>Position the paper against the closest work point by point</strong> and check every reference by hand. <span class="chip ok">Measured</span> Invented references caused desk rejections at ICLR 2026.</li>
+    <li><strong>Freeze early, get one experienced outside reader, register the abstract days ahead.</strong> <span class="chip warn">Advice</span> At ICLR 2026 the earliest fifth of abstracts was accepted at 31.1% against 22.8% for the last fifth, which is an association only.</li>
+    <li><strong>Choose the right contribution type and keep the NeurIPS and TMLR versions ready.</strong> <span class="chip">Official</span> Evaluation papers are accepted at about the conference average.</li>
+  </ol>
+  <h3>What does not move the odds</h3>
+  <ul>
+    <li>Title style, such as a question mark or a colon.</li>
+    <li>Uploading supplementary material by itself.</li>
+    <li>Posting a preprint before review: under 4 points in most settings studied.</li>
+    <li>An industry affiliation: no consistent effect under anonymous review.</li>
+  </ul>
+  <div class="widget" id="w-quiz">
+    <p class="widget-label">Try it: does this raise the chance?</p>
+    <ul class="quiz">
+      <li data-answer="no"><span>A question mark in the title</span><div class="nav-row"><button type="button" class="btn" data-guess="yes">Raises it</button><button type="button" class="btn" data-guess="no">Does not</button></div><p class="hint" hidden><strong data-v></strong> At ICLR 2026, titles with a question mark were accepted at 24.2%, against 27.0% overall.</p></li>
+      <li data-answer="yes"><span>Releasing code and data at submission</span><div class="nav-row"><button type="button" class="btn" data-guess="yes">Raises it</button><button type="button" class="btn" data-guess="no">Does not</button></div><p class="hint" hidden><strong data-v></strong> At ICLR from 2017 to 2025, 44% of papers with code or data were accepted, against 33% without.</p></li>
+      <li data-answer="no"><span>Posting the paper on arXiv before review</span><div class="nav-row"><button type="button" class="btn" data-guess="yes">Raises it</button><button type="button" class="btn" data-guess="no">Does not</button></div><p class="hint" hidden><strong data-v></strong> In most settings studied at ICLR from 2018 to 2022, the difference was under 4 points.</p></li>
+      <li data-answer="yes"><span>Replying to every reviewer with numbers</span><div class="nav-row"><button type="button" class="btn" data-guess="yes">Raises it</button><button type="button" class="btn" data-guess="no">Does not</button></div><p class="hint" hidden><strong data-v></strong> At ICLR 2024 and 2025, 17 to 23% of reviews raised their score after replies, and 1% lowered it.</p></li>
+      <li data-answer="no"><span>An industry affiliation</span><div class="nav-row"><button type="button" class="btn" data-guess="yes">Raises it</button><button type="button" class="btn" data-guess="no">Does not</button></div><p class="hint" hidden><strong data-v></strong> Under anonymous review, studies found no consistent effect either way.</p></li>
+      <li data-answer="yes"><span>A team of several authors, including an experienced one</span><div class="nav-row"><button type="button" class="btn" data-guess="yes">Raises it</button><button type="button" class="btn" data-guess="no">Does not</button></div><p class="hint" hidden><strong data-v></strong> At ICLR 2026, 8.8% of one-author submissions were accepted, against 24 to 26% for three to five authors.</p></li>
+      <li data-answer="yes"><span>Stating the limits of the study openly</span><div class="nav-row"><button type="button" class="btn" data-guess="yes">Raises it</button><button type="button" class="btn" data-guess="no">Does not</button></div><p class="hint" hidden><strong data-v></strong> The ICML review form tells reviewers to reward authors for being up front about limitations.</p></li>
+    </ul>
+    <p class="hint">The measured items are differences between groups of papers, not proven causes.</p>
+  </div>
+  <h3>Rules of the ladder</h3>
+  <ul>
+    <li>One venue at a time. Every venue bans parallel review, so each step costs three to six months.</li>
+    <li>Conferences come before TMLR, because TMLR does not take expanded versions of conference papers.</li>
+    <li>A preprint and a workshop paper without published proceedings block nothing. A workshop paper with proceedings would block every later venue.</li>
+    <li>Review is noisy. When NeurIPS gave the same papers to two committees in 2021, they disagreed on 23% of them. A rejection is not proof the paper is weak, and a second submission is the normal path.</li>
+  </ul>
+</section>
+
+<section id="outcomes">
+  <h2>Expected outcomes</h2>
+  <p>Nobody knows the result yet; that is what makes it publishable. Each pattern has a place to go.</p>
+  <div class="scroll"><table>
+    <thead><tr><th>Result</th><th>Headline</th><th>Where it goes</th></tr></thead>
+    <tbody>
+      <tr><td>Large drop in score validity</td><td>Carried scores mislead after a swap; here is the rule that fixes it</td><td>ICML, type "General"</td></tr>
+      <tr><td>Drop in some pairs, explained</td><td>Which swaps break stored scores, and why</td><td>ICML, type "Datasets, Evaluations and Benchmarks"</td></tr>
+      <tr><td>Small drop</td><td>Scores mostly survive; a few fresh checks are enough</td><td>TMLR first</td></tr>
+      <tr><td>No drop, shown by equivalence</td><td>Keeping scores is safe under these conditions</td><td>TMLR, or ICML "Negative Results" only if very tight</td></tr>
+      <tr><td>Scores weak even at home</td><td>Greedy retrieval leaves stored scores uninformative</td><td>A different paper, for TMLR or NeurIPS 2027</td></tr>
+    </tbody>
+  </table></div>
+  <div class="widget" id="w-out">
+    <p class="widget-label">Try it: how each result would look</p>
+    <p class="hint">Each tile is one model switch. The number is retained validity: 1.00 means the old scores rank as well as before, 0 means no better than a coin toss. The paper's first figure shows these values for every switch. The values here are made up to show the patterns.</p>
+    <div class="seg" data-group="o">
+      <button type="button" data-value="large" aria-pressed="true">Large drop</button>
+      <button type="button" data-value="mixed" aria-pressed="false">Drop in some pairs</button>
+      <button type="button" data-value="small" aria-pressed="false">Small drop</button>
+      <button type="button" data-value="none" aria-pressed="false">No drop</button>
+      <button type="button" data-value="weak" aria-pressed="false">Weak at home</button>
+    </div>
+    <div class="tiles" id="w-out-tiles"></div>
+    <div class="result" aria-live="polite">
+      <p data-panel="large"><strong>Headline:</strong> carried scores mislead after a swap, and here is the rule that fixes it. <strong>Where:</strong> ICML, type "General".</p>
+      <p data-panel="mixed" hidden><strong>Headline:</strong> which swaps break stored scores, and why. Same-family upgrades keep their value; switches to another maker do not. <strong>Where:</strong> ICML, type "Datasets, Evaluations and Benchmarks".</p>
+      <p data-panel="small" hidden><strong>Headline:</strong> scores mostly survive, and a few fresh checks are enough. <strong>Where:</strong> TMLR first.</p>
+      <p data-panel="none" hidden><strong>Headline:</strong> keeping scores is safe under these conditions, shown by an equivalence test. <strong>Where:</strong> TMLR, or ICML "Negative Results" only if the result is very tight.</p>
+      <p data-panel="weak" hidden><strong>Headline:</strong> the scores were near chance even with the old model, so there is nothing to carry over. <strong>Where:</strong> a different paper, for TMLR or NeurIPS 2027.</p>
+    </div>
+  </div>
+  <p><strong>Fallback ladder.</strong> ICML 2027 first. Then the NeurIPS 2027 evaluations track (dates not posted; about May by the 2026 pattern), whose 2026 call welcomed negative results, critical analyses and audits. Prepare that version in April in any case, because its deadline may fall days after the ICML decision. TMLR is the last step and is always open.</p>
+</section>
+
+<section id="present">
+  <h2>How to present it</h2>
+  <ul>
+    <li><strong>Title:</strong> say "scores", not "memory", because the nearest preprint is titled "Does Your Agent's Memory Survive a Model Upgrade?". Never say "human": every score comes from a program's grade or the model's own marking. Name the measured quantity and do not overclaim; a reviewer of one accepted measurement paper called an overclaiming title its "most serious weakness".</li>
+    <li><strong>Abstract:</strong> the forced swap in one sentence, the untested claim, what was measured (models, pairs, benchmarks), the headline number per pair, the rule, the release.</li>
+    <li><strong>First page:</strong> the CHIME cell and the MemRL sentence, then the limits stated plainly: program-graded and model-assigned scores, one item shown at a time, single-call tasks.</li>
+    <li><strong>Figure 1:</strong> a grid of old model by new model showing retained validity for every ordered pair, with the self-swap diagonal as the noise floor.</li>
+    <li><strong>Main table:</strong> one row per ordered pair, one column per arm, with intervals.</li>
+    <li><strong>Related work:</strong> a table of what each close paper measured and what it left out.</li>
+    <li><strong>Do not claim as new:</strong> moving scored memory across models, comparing own with transferred memory, or the discount rule itself (it is a known statistical device, the power prior).</li>
+    <li><strong>Release:</strong> code, prompts, raw answers, score files and probe tables, anonymised and hosted at submission.</li>
+  </ul>
+  <div class="widget" id="w-title">
+    <p class="widget-label">Try it: check a title</p>
+    <label for="w-title-in" class="hint">Type or edit a title</label>
+    <input type="text" id="w-title-in" class="title-in" value="Do Memory Scores Survive a Model Swap? An Audit of Keep, Wipe and Discount Rules for Agent Memory">
+    <ul class="verdict-list" id="w-title-res" aria-live="polite"></ul>
+    <p class="hint">Title style itself has no measured effect on acceptance. These checks are about accuracy, which reviewers do notice.</p>
+  </div>
+  <div class="widget" id="w-abs">
+    <p class="widget-label">Try it: build the abstract one sentence at a time</p>
+    <div class="seg" data-group="a">
+      <button type="button" data-value="a1" aria-pressed="true">1. Forced change</button>
+      <button type="button" data-value="a2" aria-pressed="false">2. Untested belief</button>
+      <button type="button" data-value="a3" aria-pressed="false">3. What we measured</button>
+      <button type="button" data-value="a4" aria-pressed="false">4. Headline</button>
+      <button type="button" data-value="a5" aria-pressed="false">5. The rule</button>
+      <button type="button" data-value="a6" aria-pressed="false">6. Release</button>
+      <button type="button" data-value="all" aria-pressed="false">Whole abstract</button>
+    </div>
+    <div class="result" aria-live="polite">
+      <p data-panel="a1"><strong>What goes here:</strong> why the problem exists. <strong>Example:</strong> Teams that build agents on rented language models must replace those models on the vendor's schedule, often within about a year of release.</p>
+      <p data-panel="a2" hidden><strong>What goes here:</strong> the belief nobody has tested. <strong>Example:</strong> Many such agents store a usefulness score on each memory item, and recent work suggests these scores carry over to a new model, but no study has checked whether they still rank items correctly.</p>
+      <p data-panel="a3" hidden><strong>What goes here:</strong> what you did, with its scale. <strong>Example:</strong> We measure this across 12 ordered swaps among six models from three makers, on two public benchmarks and one released codebase, holding the memory content fixed.</p>
+      <p data-panel="a4" hidden><strong>What goes here:</strong> the main number, by kind of swap. <strong>Example:</strong> Old scores keep [X]% of their ranking value within a model family but only [Y]% across makers.</p>
+      <p data-panel="a5" hidden><strong>What goes here:</strong> what practitioners should do. <strong>Example:</strong> A discount set from [k] fresh checks recovers [Z]% of the benefit of re-scoring at [W]% of its cost.</p>
+      <p data-panel="a6" hidden><strong>What goes here:</strong> what others can reuse. <strong>Example:</strong> We release code, prompts, raw answers and all probe tables.</p>
+      <p data-panel="all" hidden>Teams that build agents on rented language models must replace those models on the vendor's schedule, often within about a year of release. Many such agents store a usefulness score on each memory item, and recent work suggests these scores carry over to a new model, but no study has checked whether they still rank items correctly. We measure this across 12 ordered swaps among six models from three makers, on two public benchmarks and one released codebase, holding the memory content fixed. Old scores keep [X]% of their ranking value within a model family but only [Y]% across makers. A discount set from [k] fresh checks recovers [Z]% of the benefit of re-scoring at [W]% of its cost. We release code, prompts, raw answers and all probe tables.</p>
+    </div>
+    <p class="hint">Numbers in square brackets are filled in from the results. Sentence 4 changes with the result pattern.</p>
+  </div>
+  <p>An area chair screens each paper before reviewers see it, so the abstract, introduction and first figure get their own week. One accepted agent-memory evaluation paper nearly failed on motivation, with a reviewer asking for "a simple clear motivating example". The CHIME cell is that example.</p>
+</section>
+
+<section id="rules">
+  <h2>Submission rules to meet</h2>
+  <div class="scroll"><table>
+    <thead><tr><th>Rule</th><th>What it means for you</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td>Abstract 14 Jan, paper 22 Jan 2027, no extensions</td><td>The author list is fixed at the abstract deadline</td><td><span class="chip ok">Confirmed</span></td></tr>
+      <tr><td>Choose exactly one contribution type</td><td>"Datasets, Evaluations and Benchmarks" covers auditing and needs no new algorithm. It does not lower the bar</td><td><span class="chip ok">Confirmed</span></td></tr>
+      <tr><td>Document licensing, provenance, contamination and limits</td><td>Asked of this type where relevant; see data step 8</td><td><span class="chip ok">Confirmed</span></td></tr>
+      <tr><td>One paper only for a team with no eligible reviewer</td><td>The limit goes if one author has an accepted paper at a listed venue</td><td><span class="chip ok">Confirmed</span></td></tr>
+      <tr><td>Reciprocal reviewing</td><td>The designated author must register and review between 24 February and 16 March 2027. ICML 2026 desk-rejected 497 papers for reviewer violations</td><td><span class="chip ok">Confirmed</span></td></tr>
+      <tr><td>Two-stage review</td><td>A first-stage rejection carries a short justification, not reviews</td><td><span class="chip ok">Confirmed</span></td></tr>
+      <tr><td>8 pages, AI disclosure statement, impact statement, anonymity, preprint allowed, attendance optional</td><td>From the earlier reading of the official call. Read the author instructions again when the style file is posted</td><td><span class="chip warn">Not re-checked</span></td></tr>
+      <tr><td>TMLR criteria</td><td>Claims supported by evidence and of interest to some readers; novelty is not required</td><td><span class="chip warn">Not re-checked</span></td></tr>
+    </tbody>
+  </table></div>
+  <div class="widget" id="w-due">
+    <p class="widget-label">Try it: countdown and submission checklist</p>
+    <div class="stores">
+      <div><code>ICML abstract</code><b id="w-due-abs">&ndash;</b><span>14 January 2027, end of day anywhere on Earth</span></div>
+      <div><code>ICML paper</code><b id="w-due-pap">&ndash;</b><span>22 January 2027, end of day anywhere on Earth</span></div>
+    </div>
+    <div class="progress-line"><span data-progress-text>0 of 11 done</span><div class="meter" aria-hidden="true"><i data-progress-bar></i></div></div>
+    <ul class="checks">
+      <li><label class="check"><input type="checkbox" id="s1"><span>Every author has a complete, correct OpenReview profile</span></label></li>
+      <li><label class="check"><input type="checkbox" id="s2"><span>Author list fixed<small>It closes with the abstract on 14 January.</small></span></label></li>
+      <li><label class="check"><input type="checkbox" id="s3"><span>One contribution type chosen</span></label></li>
+      <li><label class="check"><input type="checkbox" id="s4"><span>Paper fits the page limit in the official ICML style file<small>8 pages in the earlier reading; check the style file when it is posted.</small></span></label></li>
+      <li><label class="check"><input type="checkbox" id="s5"><span>Anonymised: no names, company or links that reveal the authors</span></label></li>
+      <li><label class="check"><input type="checkbox" id="s6"><span>AI disclosure statement written</span></label></li>
+      <li><label class="check"><input type="checkbox" id="s7"><span>Impact statement written</span></label></li>
+      <li><label class="check"><input type="checkbox" id="s8"><span>Licences, data sources and limits documented</span></label></li>
+      <li><label class="check"><input type="checkbox" id="s9"><span>Code, prompts and raw answers anonymised and hosted</span></label></li>
+      <li><label class="check"><input type="checkbox" id="s10"><span>Every reference checked by hand</span></label></li>
+      <li><label class="check"><input type="checkbox" id="s11"><span>Reviewing author designated and registered, if the team has one</span></label></li>
+    </ul>
+  </div>
+</section>
+
+<section id="status">
+  <h2>Verified and open</h2>
+  <p>Two verification passes checked 50 claims against primary sources, each by three independent verifiers. All 50 were confirmed and none refuted. They covered only part of the plan.</p>
+  <div class="seg" data-group="st">
+    <button type="button" data-value="all" aria-pressed="true">All</button>
+    <button type="button" data-value="ok" aria-pressed="false">Verified</button>
+    <button type="button" data-value="open" aria-pressed="false">Unread or unverified</button>
+    <button type="button" data-value="warn" aria-pressed="false">Estimates and not re-checked</button>
+  </div>
+  <div class="scroll"><table>
+    <thead><tr><th>Part of the plan</th><th>Status</th><th>Note</th></tr></thead>
+    <tbody>
+      <tr><td>Gap is open in eight close papers read in full</td><td><span class="chip ok">Verified</span></td><td>MemRL, RoMeRL, CHIME, Goyal and Ray, MemCollab, Memory Transfer Learning, EvoKernel, arXiv 2611.03930</td></tr>
+      <tr><td>Four close papers</td><td><span class="chip open">Unread</span></td><td>Xia et al. and three ICLR 2027 submissions. The skill-library submission is the closest by title. ICLR decisions come on 16 December</td></tr>
+      <tr><td>Data and code locations, counts, formats</td><td><span class="chip ok">Verified</span></td><td>As in "Prepare the data"</td></tr>
+      <tr><td>Data preparation sequence as a whole</td><td><span class="chip warn">Not run</span></td><td>Each step is verified; nobody has run them end to end</td></tr>
+      <tr><td>Model names, prices, limits, retirement dates</td><td><span class="chip open">Unverified</span></td><td>From earlier notes. Confirm on vendor pages on day one</td></tr>
+      <tr><td>Size of memory gains on the two benchmarks with current models</td><td><span class="chip open">Unverified</span></td><td>The pilot measures it</td></tr>
+      <tr><td>Cost of about USD 700</td><td><span class="chip warn">Estimate</span></td><td>Built on assumed token counts; add embedding cost for the MemRL and RoMeRL legs</td></tr>
+      <tr><td>Statistical references (power prior, equivalence test, error bars)</td><td><span class="chip warn">Not re-checked</span></td><td>Open each paper before citing it</td></tr>
+      <tr><td>Acceptance odds</td><td><span class="chip warn">Judgement</span></td><td>Group rates adjusted by stated assumptions; not a forecast for this paper</td></tr>
+    </tbody>
+  </table></div>
+  <h3>Only you or your employer can settle</h3>
+  <ul>
+    <li>Publication clearance, and the customer-derived material in the project's hand-over files.</li>
+    <li>The author list, and whether any author already has a paper at a listed venue.</li>
+    <li>Working hours, model keys and travel.</li>
+  </ul>
+</section>
+
+<footer>
+  <p>Sources and full reasoning are in the project's reports folder: "Top venue niche and roadmap.md" (design, cost arithmetic, source links) and "Final verified paper plan.md" (first verification pass). Repository facts are as of 15 November 2026 at the commits named above.</p>
+</footer>
+
+</div>
+
+<script>
+(function () {
+  var KEY = 'model-swap-plan-checks';
+  var state = {};
+  try { state = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { state = {}; }
+  var boxes = document.querySelectorAll('.check input');
+  for (var i = 0; i < boxes.length; i++) {
+    (function (box) {
+      if (state[box.id]) { box.checked = true; }
+      box.addEventListener('change', function () {
+        state[box.id] = box.checked;
+        try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
+      });
+    })(boxes[i]);
+  }
+})();
+</script>
+<script>
+(function () {
+  function pct(x) { return Math.round(x * 100) + '%'; }
+  function bindSeg(root, group, onPick) {
+    var box = root.querySelector('.seg[data-group="' + group + '"]');
+    if (!box) return;
+    var buttons = box.querySelectorAll('button');
+    for (var i = 0; i < buttons.length; i++) {
+      buttons[i].addEventListener('click', function (e) {
+        var b = e.currentTarget;
+        for (var j = 0; j < buttons.length; j++) { buttons[j].setAttribute('aria-pressed', buttons[j] === b ? 'true' : 'false'); }
+        onPick(b.getAttribute('data-value'));
+      });
+    }
+  }
+
+  (function () {
+    var root = document.getElementById('tipsim');
+    if (!root) return;
+    var tips = [
+      { id: 'A', text: 'After a reset timeout, check the queue depth first.', rel: 0.80, old: 0.90, nw: 0.55 },
+      { id: 'B', text: 'If a completion never arrives, compare the command ID with the abort log.', rel: 0.79, old: 0.40, nw: 0.85 },
+      { id: 'C', text: 'A link retrain just before the error usually points to signal quality.', rel: 0.84, old: 0.65, nw: 0.70 },
+      { id: 'D', text: 'Re-run the command once before escalating.', rel: 0.70, old: 0.20, nw: 0.40 }
+    ];
+    var st = { model: 'new', rule: 'keep', w: 0.5 };
+    var body = document.getElementById('tipsim-body');
+    var note = document.getElementById('tipsim-note');
+    var result = document.getElementById('tipsim-result');
+    var wRow = document.getElementById('tipsim-w-row');
+    var wIn = document.getElementById('tipsim-w');
+    var wOut = document.getElementById('tipsim-w-out');
+    function trust() {
+      if (st.rule === 'keep') return 1;
+      if (st.rule === 'wipe') return 0;
+      if (st.rule === 'discount') return st.w;
+      if (st.rule === 'calibrated') return st.model === 'new' ? 0.1 : 1;
+      return 1;
+    }
+    function used(t) {
+      if (st.rule === 'rescore') return st.model === 'new' ? t.nw : t.old;
+      var w = trust();
+      return w * t.old + (1 - w) * 0.5;
+    }
+    function helps(t) { return st.model === 'new' ? t.nw : t.old; }
+    function noteText() {
+      if (st.rule === 'keep') return 'Keep: the old scores are trusted fully. Cost: nothing.';
+      if (st.rule === 'wipe') return 'Wipe: every score goes back to the starting value of 0.5, so tips are ranked by relevance alone. Cost: nothing.';
+      if (st.rule === 'discount') return 'Fixed discount: the old scores are trusted partly. Move the slider to change how much. Cost: nothing.';
+      if (st.rule === 'calibrated') {
+        return st.model === 'new'
+          ? 'Calibrated: 16 fresh cases with the new model show the old scores barely agree with it, so the rule sets trust to 0.10. Cost: 16 fresh cases.'
+          : 'Calibrated: 16 fresh cases show the old scores still agree with this model, so the rule keeps full trust. Cost: 16 fresh cases.';
+      }
+      return 'Re-score all: the running model earns every score again. This is the ceiling. Cost: fresh runs on every tip in the store.';
+    }
+    function render() {
+      wRow.hidden = st.rule !== 'discount';
+      wOut.textContent = st.w.toFixed(2);
+      note.textContent = noteText();
+      var top = -1, shown = null, best = null;
+      tips.forEach(function (t) {
+        t.rank = 0.5 * t.rel + 0.5 * used(t);
+        if (t.rank > top) { top = t.rank; shown = t; }
+        if (!best || helps(t) > helps(best)) { best = t; }
+      });
+      var html = '';
+      tips.forEach(function (t) {
+        html += '<tr' + (t === shown ? ' class="first"' : '') + '><td><strong>' + t.id + '</strong> ' + t.text + '</td>' +
+          '<td class="num">' + t.rel.toFixed(2) + '</td><td class="num">' + t.old.toFixed(2) + '</td>' +
+          '<td class="num">' + used(t).toFixed(2) + '</td><td class="num">' + pct(helps(t)) + '</td></tr>';
+      });
+      body.innerHTML = html;
+      var s = helps(shown), b = helps(best), chip, label;
+      if (shown === best) { chip = 'ok'; label = 'Best tip shown first'; }
+      else if (s >= b - 0.151) { chip = 'warn'; label = 'Good tip, not the best'; }
+      else { chip = 'open'; label = 'Weak tip shown first'; }
+      result.innerHTML = '<p><span class="chip ' + chip + '">' + label + '</span></p>' +
+        '<p>Shown first: <strong>Tip ' + shown.id + '</strong>. With the ' + st.model + ' model it helps in ' + pct(s) + ' of cases. The best tip for this model is Tip ' + best.id + ', at ' + pct(b) + '.</p>';
+    }
+    bindSeg(root, 'model', function (v) { st.model = v; render(); });
+    bindSeg(root, 'rule', function (v) { st.rule = v; render(); });
+    wIn.addEventListener('input', function () { st.w = parseFloat(wIn.value); render(); });
+    render();
+  })();
+
+  (function () {
+    var home = document.getElementById('rv-home');
+    if (!home) return;
+    var swap = document.getElementById('rv-swap');
+    var homeOut = document.getElementById('rv-home-out');
+    var swapOut = document.getElementById('rv-swap-out');
+    var bar = document.getElementById('rv-bar');
+    var result = document.getElementById('rv-result');
+    function render() {
+      var h = parseFloat(home.value), s = parseFloat(swap.value);
+      homeOut.textContent = h + '%';
+      swapOut.textContent = s + '%';
+      var r = (s - 50) / (h - 50);
+      bar.style.width = Math.max(0, Math.min(1, r)) * 100 + '%';
+      var reading;
+      if (r < 0) reading = 'The old scores now point the wrong way. Wipe them.';
+      else if (r < 0.3) reading = 'The old scores kept little value. Wipe them or earn them again.';
+      else if (r < 0.8) reading = 'The old scores kept part of their value. A discount fits.';
+      else if (r <= 1) reading = 'The old scores kept most of their value. Keeping them is reasonable.';
+      else reading = 'The old scores rank even better with the new model. Keep them.';
+      result.innerHTML = '<p>Retained validity = (' + s + ' − 50) ÷ (' + h + ' − 50) = <strong>' + r.toFixed(2) + '</strong></p>' +
+        '<p>' + reading + ' <span class="hint">Illustrative reading; the paper sets its rule from the data.</span></p>';
+    }
+    home.addEventListener('input', render);
+    swap.addEventListener('input', render);
+    render();
+  })();
+
+  (function () {
+    var root = document.getElementById('gate-check');
+    if (!root) return;
+    var ids = ['g-gain', 'g-conc', 'g-conclow', 'g-dis', 'g-items', 'g-diff', 'g-cost', 'g-ci'];
+    var result = document.getElementById('gate-result');
+    function val(id) { return parseFloat(document.getElementById(id).value); }
+    function render() {
+      var fails = [];
+      if (!(val('g-gain') >= 5 && document.getElementById('g-ci').checked)) fails.push('Memory gain: memory does not help enough on this benchmark. Switch benchmark before spending more.');
+      if (!(val('g-conc') >= 0.6 && val('g-conclow') > 0.55)) fails.push('Home concordance: the scores do not mean enough even with the old model. Raise exploration in the build and re-run the pilot for two days.');
+      if (!(val('g-dis') < 15)) fails.push('Repeat disagreement: identical runs differ too often. Find the cause, such as sampling settings or prompts, before scaling up.');
+      if (!(val('g-items') >= 150 && val('g-diff') >= 30)) fails.push('Coverage: too few items were revisited, or too few probes can tell tips apart. Build for longer or raise exploration.');
+      if (!(val('g-cost') <= 2)) fails.push('Cost: the run costs more than twice the estimate. Re-plan the size of the grid before going on.');
+      if (!fails.length) {
+        result.innerHTML = '<p><span class="chip ok">Go</span></p><p>All five conditions hold. Run the full grid from 23 November.</p>';
+      } else {
+        result.innerHTML = '<p><span class="chip open">No go</span></p><ul>' + fails.map(function (f) { return '<li>' + f + '</li>'; }).join('') + '</ul><p>If the gate fails a second time, the January attempt with this idea is over.</p>';
+      }
+    }
+    ids.forEach(function (id) {
+      var el = document.getElementById(id);
+      el.addEventListener('input', render);
+      el.addEventListener('change', render);
+    });
+    render();
+  })();
+
+  (function () {
+    var root = document.getElementById('ladder');
+    if (!root) return;
+    var F = 0.656;
+    var st = { elig: 'yes', tmlr: 70.6 };
+    var venues = [
+      { id: 'icml', name: 'ICML 2027', rate: 26.6, when: 'May 2027', tier: 'top-ranked', top: true, on: true },
+      { id: 'neurips', name: 'NeurIPS 2027, evaluations track', rate: 25.3, when: 'about Sep 2027', tier: 'top-ranked', top: true, on: true },
+      { id: 'tmlr', name: 'TMLR journal', rate: 70.6, when: 'about Jan 2028', tier: 'respected, not ranked', top: false, on: true },
+      { id: 'uai', name: 'UAI 2028', rate: 30.5, when: 'about Jun 2028', tier: 'second tier', top: false, on: false },
+      { id: 'plos', name: 'PLOS ONE journal', rate: 30.7, when: 'about Dec 2028', tier: 'general-science journal', top: false, on: false },
+      { id: 'ecml', name: 'ECML-PKDD 2029', rate: 24.3, when: 'about May 2029', tier: 'second tier', top: false, on: false },
+      { id: 'cikm', name: 'CIKM 2029', rate: 27, when: 'about Aug 2029', tier: 'second tier', top: false, on: false }
+    ];
+    var list = document.getElementById('ladder-list');
+    venues.forEach(function (v) {
+      var li = document.createElement('li');
+      li.innerHTML = '<label for="lad-' + v.id + '"><input type="checkbox" id="lad-' + v.id + '"' + (v.on ? ' checked' : '') + '><span><strong>' + v.name + '</strong><small data-meta></small></span></label><span class="cum num" data-cum></span>';
+      list.appendChild(li);
+      v.box = li.querySelector('input');
+      v.meta = li.querySelector('[data-meta]');
+      v.cumEl = li.querySelector('[data-cum]');
+      v.box.addEventListener('change', function () { v.on = v.box.checked; render(); });
+    });
+    function rateOf(v) {
+      if (v.id === 'icml') return st.elig === 'yes' ? 26.6 : 13;
+      if (v.id === 'tmlr') return st.tmlr;
+      return v.rate;
+    }
+    function render() {
+      var missI = 1, missC = 1, topI = 1, topC = 1, n = 0, last = '';
+      venues.forEach(function (v) {
+        var r = rateOf(v);
+        v.meta.textContent = r + '% accepted · decision ' + v.when + ' · ' + v.tier;
+        if (!v.on) { v.cumEl.textContent = '—'; return; }
+        var pI = r / 100, pC = n === 0 ? pI : pI * F;
+        missI *= 1 - pI; missC *= 1 - pC;
+        if (v.top) { topI *= 1 - pI; topC *= 1 - pC; }
+        n++; last = v.when;
+        v.cumEl.textContent = pct(1 - missI) + ' / ' + pct(1 - missC);
+      });
+      var ind = 1 - missI, cau = 1 - missC;
+      document.getElementById('lad-ind').style.width = ind * 100 + '%';
+      document.getElementById('lad-cau').style.width = cau * 100 + '%';
+      document.getElementById('lad-ind-out').textContent = pct(ind);
+      document.getElementById('lad-cau-out').textContent = pct(cau);
+      var res = document.getElementById('ladder-result');
+      if (!n) { res.innerHTML = '<p>Tick at least one venue.</p>'; return; }
+      var verdict;
+      if (cau >= 0.95) verdict = '95% is reached on both readings.';
+      else if (ind >= 0.95) verdict = '95% is reached only if every try is independent, which is the optimistic reading.';
+      else verdict = '95% is not reached with these venues.';
+      res.innerHTML = '<p>Accepted somewhere peer-reviewed: <strong>' + pct(cau) + ' to ' + pct(ind) + '</strong>, last decision ' + last + '.</p>' +
+        '<p>Accepted at a top-ranked venue: <strong>' + pct(1 - topC) + ' to ' + pct(1 - topI) + '</strong>.</p><p>' + verdict + '</p>';
+    }
+    bindSeg(root, 'elig', function (v) { st.elig = v; render(); });
+    bindSeg(root, 'tmlr', function (v) { st.tmlr = parseFloat(v); render(); });
+    render();
+  })();
+})();
+</script>
+<script>
+(function () {
+  function bindSeg(root, group, onPick) {
+    var box = root.querySelector('.seg[data-group="' + group + '"]');
+    if (!box) return;
+    var buttons = box.querySelectorAll('button');
+    for (var i = 0; i < buttons.length; i++) {
+      buttons[i].addEventListener('click', function (e) {
+        var b = e.currentTarget;
+        for (var j = 0; j < buttons.length; j++) { buttons[j].setAttribute('aria-pressed', buttons[j] === b ? 'true' : 'false'); }
+        onPick(b.getAttribute('data-value'));
+      });
+    }
+  }
+  function bindPanels(root, group, extra) {
+    if (!root) return;
+    var panels = root.querySelectorAll('[data-panel]');
+    function show(v) {
+      for (var i = 0; i < panels.length; i++) { panels[i].hidden = panels[i].getAttribute('data-panel') !== v; }
+      if (extra) extra(v);
+    }
+    bindSeg(root, group, show);
+    var pressed = root.querySelector('.seg[data-group="' + group + '"] button[aria-pressed="true"]');
+    if (pressed) show(pressed.getAttribute('data-value'));
+  }
+
+  (function () {
+    var root = document.getElementById('w-rules');
+    if (!root) return;
+    var vals = { keep: 0.90, wipe: 0.50, discount: 0.70, calibrated: 0.54 };
+    var out = document.getElementById('w-rules-out');
+    var bar = document.getElementById('w-rules-bar');
+    bindPanels(root, 'r', function (v) { out.textContent = vals[v].toFixed(2); bar.style.width = vals[v] * 100 + '%'; });
+  })();
+
+  bindPanels(document.getElementById('w-memrl'), 'v');
+  bindPanels(document.getElementById('w-chime'), 'd');
+  bindPanels(document.getElementById('w-dir'), 'g');
+  bindPanels(document.getElementById('w-link'), 'l');
+
+  (function () {
+    var y = document.getElementById('w-forced-years');
+    if (!y) return;
+    var l = document.getElementById('w-forced-life');
+    var yo = document.getElementById('w-forced-years-out');
+    var lo = document.getElementById('w-forced-life-out');
+    var res = document.getElementById('w-forced-res');
+    function render() {
+      var years = parseInt(y.value, 10), life = parseInt(l.value, 10);
+      var yText = years + (years === 1 ? ' year' : ' years');
+      yo.textContent = yText;
+      lo.textContent = life + ' months';
+      var n = Math.floor(years * 12 / life);
+      res.innerHTML = '<p>About <strong>' + n + '</strong> forced model ' + (n === 1 ? 'change' : 'changes') + ' in ' + yText + '. Each one is a day when someone must decide what to do with the stored scores.</p>';
+    }
+    y.addEventListener('input', render);
+    l.addEventListener('input', render);
+    render();
+  })();
+
+  (function () {
+    var root = document.getElementById('w-kappa');
+    if (!root) return;
+    var box = document.getElementById('w-kappa-dots');
+    var seed = 7;
+    function rnd() { seed = (seed * 16807) % 2147483647; return seed / 2147483647; }
+    var idx = [], i, j, t;
+    for (i = 0; i < 275; i++) idx.push(i);
+    for (i = idx.length - 1; i > 0; i--) { j = Math.floor(rnd() * (i + 1)); t = idx[i]; idx[i] = idx[j]; idx[j] = t; }
+    var dis = {};
+    for (i = 0; i < 50; i++) dis[idx[i]] = true;
+    var html = '';
+    for (i = 0; i < 275; i++) html += '<span' + (dis[i] ? ' class="dis"' : '') + '></span>';
+    box.innerHTML = html;
+    bindSeg(root, 'k', function (v) { box.classList.toggle('show', v === 'dis'); });
+  })();
+
+  (function () {
+    var root = document.getElementById('w-papers');
+    if (!root) return;
+    var rows = root.querySelectorAll('tbody tr');
+    bindSeg(root, 'f', function (v) {
+      for (var i = 0; i < rows.length; i++) {
+        var r = rows[i].getAttribute('data-read');
+        rows[i].hidden = !(v === 'all' || r === 'ours' || (v === 'read' && r === 'yes') || (v === 'unread' && r === 'no'));
+      }
+    });
+  })();
+})();
+</script>
+<script>
+(function () {
+  function bindSeg(root, group, onPick) {
+    if (!root) return;
+    var box = root.querySelector('.seg[data-group="' + group + '"]');
+    if (!box) return;
+    var buttons = box.querySelectorAll('button');
+    for (var i = 0; i < buttons.length; i++) {
+      buttons[i].addEventListener('click', function (e) {
+        var b = e.currentTarget;
+        for (var j = 0; j < buttons.length; j++) { buttons[j].setAttribute('aria-pressed', buttons[j] === b ? 'true' : 'false'); }
+        onPick(b.getAttribute('data-value'));
+      });
+    }
+  }
+  function bindPanels(root, group, extra) {
+    if (!root) return;
+    var panels = root.querySelectorAll('[data-panel]');
+    function show(v) {
+      for (var i = 0; i < panels.length; i++) { panels[i].hidden = panels[i].getAttribute('data-panel') !== v; }
+      if (extra) extra(v);
+    }
+    bindSeg(root, group, show);
+    var pressed = root.querySelector('.seg[data-group="' + group + '"] button[aria-pressed="true"]');
+    if (pressed) show(pressed.getAttribute('data-value'));
+  }
+  function chip(cls, text) { return '<span class="chip ' + cls + '">' + text + '</span>'; }
+  function today() { var d = new Date(); return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+  function daysTo(iso) { var p = iso.split('-'); var t = new Date(+p[0], +p[1] - 1, +p[2]); return Math.round((t - today()) / 86400000); }
+
+  (function () {
+    var els = document.querySelectorAll('.dates [data-date]');
+    for (var i = 0; i < els.length; i++) {
+      var n = daysTo(els[i].getAttribute('data-date'));
+      var em = document.createElement('em');
+      em.textContent = n > 1 ? 'in ' + n + ' days' : n === 1 ? 'tomorrow' : n === 0 ? 'today' : 'passed';
+      els[i].appendChild(em);
+    }
+  })();
+
+  Array.prototype.forEach.call(document.querySelectorAll('.progress-line'), function (line) {
+    var list = line.nextElementSibling;
+    if (!list) return;
+    var boxes = list.querySelectorAll('input[type="checkbox"]');
+    var txt = line.querySelector('[data-progress-text]');
+    var bar = line.querySelector('[data-progress-bar]');
+    function upd() {
+      var n = 0;
+      for (var j = 0; j < boxes.length; j++) { if (boxes[j].checked) n++; }
+      txt.textContent = n + ' of ' + boxes.length + ' done';
+      bar.style.width = (boxes.length ? n / boxes.length * 100 : 0) + '%';
+    }
+    for (var j = 0; j < boxes.length; j++) { boxes[j].addEventListener('change', upd); }
+    upd();
+  });
+
+  (function () {
+    var data = document.getElementById('w-flash-data');
+    if (!data) return;
+    var cards = data.children, i = 0;
+    var q = document.getElementById('w-flash-q');
+    var a = document.getElementById('w-flash-a');
+    var c = document.getElementById('w-flash-count');
+    var show = document.getElementById('w-flash-show');
+    function render() {
+      var card = cards[i].children;
+      q.textContent = card[0].textContent;
+      a.firstElementChild.textContent = card[1].textContent;
+      a.hidden = true;
+      show.textContent = 'Show the answer';
+      c.textContent = 'Question ' + (i + 1) + ' of ' + cards.length;
+    }
+    show.addEventListener('click', function () { a.hidden = !a.hidden; show.textContent = a.hidden ? 'Show the answer' : 'Hide the answer'; });
+    document.getElementById('w-flash-next').addEventListener('click', function () { i = (i + 1) % cards.length; render(); });
+    document.getElementById('w-flash-prev').addEventListener('click', function () { i = (i - 1 + cards.length) % cards.length; render(); });
+    render();
+  })();
+  bindPanels(document.getElementById('w-say'), 's');
+
+  (function () {
+    var root = document.getElementById('w-split');
+    if (!root) return;
+    var N = 1764, ins = {}, outs = {};
+    var seg = root.querySelectorAll('.split i');
+    var res = document.getElementById('w-split-res');
+    function render() {
+      var b = +ins.b.value, p = +ins.p.value, t = +ins.t.value;
+      outs.b.textContent = b; outs.p.textContent = p; outs.t.textContent = t;
+      var used = b + p + t, total = Math.max(N, used), u = Math.max(0, N - used);
+      var parts = [b, p, t, u];
+      for (var k = 0; k < 4; k++) { seg[k].style.width = parts[k] / total * 100 + '%'; }
+      if (used > N) {
+        res.innerHTML = '<p>' + chip('open', 'Overlap') + ' These parts add up to ' + used + ' tasks, more than the ' + N + ' in the stream. Some tasks would sit in two parts, and the probe would judge scores with tasks that helped earn them. Make a part smaller.</p>';
+      } else {
+        res.innerHTML = '<p>' + chip('ok', 'No overlap') + ' Build ' + b + ', probe ' + p + ', test ' + t + '. ' + u + ' tasks are not used. No task is in two parts.</p>';
+      }
+    }
+    ['b', 'p', 't'].forEach(function (k) {
+      ins[k] = document.getElementById('w-split-' + k);
+      outs[k] = document.getElementById('w-split-' + k + '-out');
+      ins[k].addEventListener('input', render);
+    });
+    bindSeg(root, 'b', function (v) { N = +v; render(); });
+    render();
+  })();
+
+  (function () {
+    var root = document.getElementById('w-stores');
+    if (!root) return;
+    var els = [document.getElementById('w-st-q'), document.getElementById('w-st-m'), document.getElementById('w-st-f')];
+    var states = {
+      file: [['0.90', true], ['0.90', false], ['0.50', false]],
+      qcache: [['deleted', false], ['0.90', true], ['0.50', false]],
+      folder: [['deleted', false], ['deleted', false], ['0.50', true]]
+    };
+    bindPanels(root, 'm', function (v) {
+      var s = states[v];
+      for (var k = 0; k < 3; k++) { els[k].querySelector('b').textContent = s[k][0]; els[k].classList.toggle('read', s[k][1]); }
+    });
+  })();
+
+  (function () {
+    var root = document.getElementById('w-rec');
+    if (!root) return;
+    var btns = root.querySelectorAll('.rec button');
+    var panels = root.querySelectorAll('[data-fp]');
+    function pick(f) {
+      for (var k = 0; k < btns.length; k++) { btns[k].setAttribute('aria-pressed', btns[k].getAttribute('data-f') === f ? 'true' : 'false'); }
+      for (var m = 0; m < panels.length; m++) { panels[m].hidden = panels[m].getAttribute('data-fp') !== f; }
+    }
+    for (var k = 0; k < btns.length; k++) { btns[k].addEventListener('click', function (e) { pick(e.currentTarget.getAttribute('data-f')); }); }
+    pick('model_id');
+  })();
+
+  (function () {
+    var input = document.getElementById('w-when-day');
+    if (!input) return;
+    var phases = [
+      [0, 7, 'Build and pilot', 'The ten prerequisites, data steps 1 to 5, and the three-model pilot.', 'Five pilot numbers and the go or no-go on 22 November.'],
+      [8, 14, 'Full build on DDXPlus', 'Build and home probes for six models and three stream orders. Finish all calls to the oldest model. Set up the MemRL leg.', 'The home-validity table and the first three swap pairs.'],
+      [15, 21, 'All twelve pairs', 'All twelve pairs on DDXPlus. Build and probes on BIRD. Every arm scored offline.', 'Main table and figure on two benchmarks: the minimum bar.'],
+      [22, 30, 'Confirmation', 'Live check on four pairs, the MemRL leg, the RoMeRL score files and the three predictions.', 'Experiments frozen on 15 December.'],
+      [31, 46, 'Drafting', 'Read the ICLR 2027 decisions, choose the route from the result, draft methods and results, build the release package.', 'A technical draft.'],
+      [47, 53, 'The first page', 'Abstract, introduction and first figure, with one outside reader.', 'The first page, written for the first-stage screen.'],
+      [54, 60, 'Related work and abstract', 'Related work, limits and disclosure statements. Fix the author list.', 'Abstract submitted on 14 January.'],
+      [61, 68, 'Final checks', 'Check every reference by hand, finish the appendix, anonymise the repository.', 'Paper submitted on 22 January.']
+    ];
+    var miles = [[7, 'Go or no-go'], [30, 'Experiments frozen'], [60, 'Abstract due'], [68, 'Paper due']];
+    var t0 = Math.round((today() - new Date(2026, 10, 15)) / 86400000);
+    if (t0 >= 0 && t0 <= 68) input.value = t0;
+    var out = document.getElementById('w-when-out');
+    var bar = document.getElementById('w-when-bar');
+    var res = document.getElementById('w-when-res');
+    function render() {
+      var day = +input.value, d = new Date(2026, 10, 15 + day);
+      out.textContent = d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+      bar.style.width = day / 68 * 100 + '%';
+      var ph = phases[0];
+      for (var k = 0; k < phases.length; k++) { if (day >= phases[k][0] && day <= phases[k][1]) ph = phases[k]; }
+      var next = null;
+      for (var m = 0; m < miles.length; m++) { if (miles[m][0] >= day) { next = miles[m]; break; } }
+      var nx = '';
+      if (next) { var left = next[0] - day; nx = left === 0 ? next[1] + ' is today.' : next[1] + ' in ' + left + (left === 1 ? ' day.' : ' days.'); }
+      res.innerHTML = '<p><strong>' + ph[2] + '</strong> (day ' + (day + 1) + ' of 69)</p><p>' + ph[3] + '</p><p><strong>By the end of this phase:</strong> ' + ph[4] + '</p><p>' + nx + '</p>';
+    }
+    input.addEventListener('input', render);
+    render();
+  })();
+
+  (function () {
+    var root = document.getElementById('w-bar');
+    if (!root) return;
+    var res = document.getElementById('w-bar-res');
+    function n(id) { return parseFloat(document.getElementById(id).value); }
+    function c(id) { return document.getElementById(id).checked; }
+    function ul(a) { return '<ul>' + a.map(function (x) { return '<li>' + x + '</li>'; }).join('') + '</ul>'; }
+    function render() {
+      var minMiss = [], tgtMiss = [];
+      if (!(n('b-bench') >= 2)) minMiss.push('At least two public benchmarks.');
+      if (!(n('b-models') >= 6)) minMiss.push('Six models from three makers.');
+      if (!(n('b-pairs') >= 12)) minMiss.push('All twelve ordered swap pairs.');
+      if (!c('b-arms')) minMiss.push('All seven arms.');
+      if (!(Math.max(n('b-cv'), n('b-cc')) >= 0.6)) minMiss.push('Home concordance of at least 0.60 for one score type.');
+      if (!c('b-perpair')) minMiss.push('The swap effect per pair, with intervals and the noise floor.');
+      if (!c('b-kwd')) minMiss.push('Keep, wipe and discount compared.');
+      if (!c('b-pred')) minMiss.push('The three predictions reported.');
+      if (!c('b-evid')) minMiss.push('Prediction file, paired tests, intervals, cost table and release.');
+      if (!c('b-code')) tgtMiss.push('The released-code leg.');
+      if (!(n('b-cv') >= 0.6 && n('b-cc') >= 0.6)) tgtMiss.push('Home concordance of at least 0.60 for both score types.');
+      if (!c('b-clear')) tgtMiss.push('A clear drop in a subset of pairs, or a tight no-drop result.');
+      if (!c('b-holds')) tgtMiss.push('At least one prediction that holds across the twelve pairs.');
+      if (!c('b-calib')) tgtMiss.push('A calibrated discount that recovers most of the ceiling.');
+      if (minMiss.length) res.innerHTML = '<p>' + chip('open', 'Below the minimum') + '</p><p>Missing for the minimum:</p>' + ul(minMiss);
+      else if (tgtMiss.length) res.innerHTML = '<p>' + chip('warn', 'Meets the minimum') + ' Enough for TMLR.</p><p>Still missing for the ICML target:</p>' + ul(tgtMiss);
+      else res.innerHTML = '<p>' + chip('ok', 'Meets the target') + ' Competitive at ICML. Competitive is not the same as accepted.</p>';
+    }
+    var els = root.querySelectorAll('input');
+    for (var k = 0; k < els.length; k++) { els[k].addEventListener('input', render); els[k].addEventListener('change', render); }
+    render();
+  })();
+
+  (function () {
+    var root = document.getElementById('w-out');
+    if (!root) return;
+    var pairs = [
+      ['Haiku 4.5 → Haiku 5.5', 'upgrade'], ['GPT-5.6-luna → GPT-6-luna', 'upgrade'], ['Qwen3.5 → Qwen3.8', 'upgrade'],
+      ['Haiku 5.5 → Haiku 4.5', 'downgrade, control'], ['GPT-6-luna → GPT-5.6-luna', 'downgrade, control'], ['Qwen3.8 → Qwen3.5', 'downgrade, control'],
+      ['Haiku 5.5 → GPT-6-luna', 'other maker'], ['GPT-6-luna → Haiku 5.5', 'other maker'], ['Haiku 5.5 → Qwen3.8', 'other maker'],
+      ['Qwen3.8 → Haiku 5.5', 'other maker'], ['GPT-6-luna → Qwen3.8', 'other maker'], ['Qwen3.8 → GPT-6-luna', 'other maker']
+    ];
+    var vals = {
+      large: [0.55, 0.62, 0.48, 0.50, 0.58, 0.45, 0.18, 0.22, 0.12, 0.25, 0.20, 0.15],
+      mixed: [0.92, 0.95, 0.88, 0.90, 0.93, 0.85, 0.30, 0.62, 0.25, 0.58, 0.35, 0.70],
+      small: [0.90, 0.92, 0.86, 0.88, 0.90, 0.84, 0.80, 0.83, 0.78, 0.82, 0.79, 0.85],
+      none: [1.00, 0.98, 0.99, 0.97, 1.01, 0.98, 0.96, 0.99, 0.97, 1.00, 0.98, 0.96],
+      weak: null
+    };
+    var box = document.getElementById('w-out-tiles');
+    bindPanels(root, 'o', function (v) {
+      var a = vals[v], html = '';
+      for (var k = 0; k < pairs.length; k++) {
+        var x = a ? a[k] : null;
+        var col = x === null ? 'var(--muted)' : x >= 0.8 ? 'var(--ok)' : x >= 0.3 ? 'var(--warn)' : 'var(--open)';
+        html += '<div style="--tc: ' + col + '"><span>' + pairs[k][0] + '</span><b>' + (x === null ? 'n/a' : x.toFixed(2)) + '</b><small>' + pairs[k][1] + '</small></div>';
+      }
+      box.innerHTML = html;
+    });
+  })();
+
+  (function () {
+    var input = document.getElementById('w-title-in');
+    if (!input) return;
+    var res = document.getElementById('w-title-res');
+    function render() {
+      var t = input.value.toLowerCase(), out = [];
+      function add(cls, label, msg) { out.push('<li>' + chip(cls, label) + ' ' + msg + '</li>'); }
+      if (!t.trim()) { res.innerHTML = '<li>Type a title to check it.</li>'; return; }
+      if (/\bscores?\b/.test(t)) add('ok', 'Good', 'Names the measured quantity: scores.');
+      else add('warn', 'Check', 'Name what is measured: scores. The nearest preprint is titled "Does Your Agent’s Memory Survive a Model Upgrade?", so a title about memory alone reads as the same paper.');
+      if (/\bhuman/.test(t)) add('open', 'Fix', 'Remove "human". Every score in the study comes from a program or from the model itself.');
+      else add('ok', 'Good', 'Does not claim human feedback.');
+      if (/\b(always|never|prove|proves|proven|solve|solves|solved|guarantee|guarantees|all models)\b/.test(t)) add('warn', 'Check', 'Overclaiming word found. A reviewer of one accepted measurement paper called its overclaiming title the most serious weakness.');
+      else add('ok', 'Good', 'No overclaiming words.');
+      if (/(swap|upgrade|replace|change|switch)/.test(t)) add('ok', 'Good', 'Says what changes: the model.');
+      else add('warn', 'Check', 'Say what changes: a model swap, upgrade or replacement.');
+      res.innerHTML = out.join('');
+    }
+    input.addEventListener('input', render);
+    render();
+  })();
+  bindPanels(document.getElementById('w-abs'), 'a');
+  bindPanels(document.getElementById('w-pred'), 'p');
+
+  (function () {
+    var a = document.getElementById('w-due-abs');
+    if (!a) return;
+    function txt(n) { return n > 1 ? n + ' days left' : n === 1 ? '1 day left' : n === 0 ? 'Due today' : 'Passed'; }
+    a.textContent = txt(daysTo('2027-01-14'));
+    document.getElementById('w-due-pap').textContent = txt(daysTo('2027-01-22'));
+  })();
+
+  (function () {
+    var sec = document.getElementById('status');
+    if (!sec) return;
+    var rows = sec.querySelectorAll('tbody tr');
+    bindSeg(sec, 'st', function (v) {
+      for (var k = 0; k < rows.length; k++) {
+        var ch = rows[k].querySelector('.chip');
+        var cls = ch ? (ch.classList.contains('ok') ? 'ok' : ch.classList.contains('open') ? 'open' : 'warn') : 'warn';
+        rows[k].hidden = !(v === 'all' || v === cls);
+      }
+    });
+  })();
+
+  Array.prototype.forEach.call(document.querySelectorAll('#w-quiz .quiz li'), function (li) {
+    var ans = li.getAttribute('data-answer');
+    var p = li.querySelector('p');
+    var v = p.querySelector('[data-v]');
+    var bs = li.querySelectorAll('[data-guess]');
+    Array.prototype.forEach.call(bs, function (b) {
+      b.addEventListener('click', function () {
+        for (var k = 0; k < bs.length; k++) { bs[k].setAttribute('aria-pressed', bs[k] === b ? 'true' : 'false'); }
+        v.textContent = b.getAttribute('data-guess') === ans ? 'Right.' : 'Not quite.';
+        p.hidden = false;
+      });
+    });
+  });
+})();
+</script>
