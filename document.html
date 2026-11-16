@@ -126,7 +126,7 @@ details.glos summary{cursor:pointer;color:var(--accent)}
 <h1>SSD failure analysis: from files in a folder to a test script</h1>
 <p class="lead">When a solid-state drive (SSD) fails, an engineer must find out why, and must be able to make the failure happen again. Today that means reading very large recordings by hand. This system reads the recording, finds the errors with fixed code, and produces a test script that replays the failure. AI agents do the drafting, so less human work is needed. A named person, the admin, approves every important step. AI reduces human work here; it does not replace the admin.</p>
 <div class="banner"><b>Be aware.</b> Every recording on this machine is synthetic. None came from a real drive or from the field. No real drive has run a generated test: they ran on a simulated drive. The scorecard at the end says what that means for each claim.</div>
-<nav class="toc"><a href="#now"><b>Where the work stands</b></a><a href="#sessions">Which conversation answers you</a><a href="#days">Day by day</a><a href="#move">The move to Windows</a><a href="#arch">System architecture</a><a href="#settings">Start page, Settings, Stop, Delete</a><a href="#rea">The REA agent</a><a href="#investigate">The investigation agent</a><a href="#kept">Conversations that are kept</a><a href="#terminal">opencode in a terminal</a><a href="#choice">Your questions, and stage 2 as a choice</a><a href="#again">Opening an analysis again</a><a href="#f4">Family 4: Coding research</a><a href="#nvmerules">NVMe command rules</a><a href="#s1">Stage 1</a><a href="#s2">Stage 2</a><a href="#naming">Naming and classifying a defect</a><a href="#loop">Self-improvement</a><a href="#walk">Step-by-step example</a><a href="#score">Scorecard</a><a href="#kpihow">How the KPIs were measured</a><a href="#human">What stays human</a></nav>
+<nav class="toc"><a href="#now"><b>Where the work stands</b></a><a href="#sessions">Which conversation answers you</a><a href="#days">Day by day</a><a href="#move">The move to Windows</a><a href="#arch">System architecture</a><a href="#settings">Start page, Settings, Stop, Delete</a><a href="#rea">The REA agent</a><a href="#investigate">The investigation agent</a><a href="#kept">Conversations that are kept</a><a href="#terminal">opencode in a terminal</a><a href="#choice">Your questions, and stage 2 as a choice</a><a href="#again">Opening an analysis again</a><a href="#f4">Family 4: Coding research</a><a href="#nvmerules">NVMe command rules</a><a href="#s1">Stage 1</a><a href="#s2">Stage 2</a><a href="#naming">Naming and classifying a defect</a><a href="#loop">Self-improvement</a><a href="#walk">Step-by-step example</a><a href="#score">Scorecard</a><a href="#kpihow">How the KPIs were measured</a><a href="#human">What stays human</a><a href="#meets">How it meets the project statement</a><a href="#buttons">The page of one error, button by button</a></nav>
 
 <h2 id="now">Where the work stands on 15 November 2026</h2>
 <p>This part is the short answer to &ldquo;what is going on?&rdquo;. Press a button to see one part: what it is, where it stands, how it was checked and what is still open. The rest of the document explains each part in full.</p>
@@ -153,7 +153,7 @@ details.glos summary{cursor:pointer;color:var(--accent)}
 <div class="banner"><b>The application has never run on Windows.</b> It was written and tested on Linux. The code was read for Windows and the faults found were fixed, but that is reading, not a run. The first run on Windows is the next piece of work, and it happens on the Windows laptop.</div>
 <div class="card"><b>What to take from GitHub.</b> Since the afternoon of 15 November the repository is <a href="https://github.com/Gangasagarhl/Tempororay" style="overflow-wrap:anywhere">https://github.com/Gangasagarhl/Tempororay</a>; the owner deleted the earlier one. It holds ten files in one commit.
 <div class="tw"><table><tr><th>File</th><th>What it is</th></tr>
-<tr><td>the code zip (its name begins with <code>field_to_test_loop_</code>, then the date and the build number; take the newest one) and its checksum file</td><td>the application; it unpacks to the folder <code>13_production_app</code>. The zip there is build 25 of 15 November, afternoon; what builds 23, 24 and 25 added is listed under the three days of 15 November above. They are tested on synthetic data only</td></tr>
+<tr><td>the code zip (its name begins with <code>field_to_test_loop_</code>, then the date and the build number; take the newest one) and its checksum file</td><td>the application; it unpacks to the folder <code>13_production_app</code>. The zip there is build 26 of 15 November (a new installation keeps only the three NVMe command rules); what builds 23 to 26 added is listed under the three days of 15 November above. They are tested on synthetic data only</td></tr>
 <tr><td><code>field_to_test_loop_sample_recordings.zip</code> and its checksum file</td><td>five small synthetic recordings (55 megabytes). The tests and a first analysis need them. It unpacks inside <code>13_production_app</code></td></tr>
 <tr><td><code>document.html</code></td><td>this document</td></tr>
 <tr><td><code>README.md</code></td><td>the start page of the repository, with the sentences to give an agent</td></tr>
@@ -633,6 +633,230 @@ The rounds end on a <b>clean round</b> (the program's checks pass, the run on re
 <li>The admin checks what a correct drive must answer, before any test is written, and approves each test file after its trial on the simulated drive.</li>
 <li>The admin decides. AI drafts and explains. Program code finds the errors, computes each error's evidence, names the defect from the dictionary and decides the cause keyword by fixed rules. The AI model never decides whether an error exists, what the defect is called, or its cause.</li>
 </ul>
+<h2 id="meets">9. How the application meets the project statement</h2>
+<p>The project started from a written statement: a problem, a proposed solution, goals, a way to deploy it and expected outcomes. Split into single sentences, it makes 16 parts, S1 to S16. This section takes them one by one: what each asks, what was built, what was measured, and how strictly it is met today.</p>
+<div class="banner"><b>The honest line first.</b> Everything below ran on synthetic recordings and a simulated drive. Nothing ran on Windows, on a real capture, on a real drive, or in a real validation suite. No engineer was timed. So, judged strictly, <b>0 of the 16 parts are covered in the real world, 14 are partly covered, and 2 are not covered</b> (S2, faster reproduction in the lab; S11, learning from historical data).</div>
+
+<div class="card"><h3>First, a story: the garage and its promise</h3>
+<p>A car stalls, but only sometimes. The garage manager writes a promise to the owner: &ldquo;We will find the fault from the car's driving log. We will make it stall again in the workshop, quickly. We will keep a binder of repair cards so the same fault is never missed twice. We will hand the inspection station a check it can run on every car.&rdquo;</p>
+<p>The mechanic builds a tool for each line of the promise. He tries every tool in the yard behind the garage, on a practice car that stalls when he tells it to. Everything works there.</p>
+<p>Is the promise kept? Not yet. No customer's car has been on the road with the tools, and nobody timed how long the mechanics took with and without them. The honest grade for most lines is &ldquo;partly&rdquo;: the tool exists and worked in the yard. A line is &ldquo;kept&rdquo; only when it works on a real car.</p>
+<div class="tw"><table><thead><tr><th>In the story</th><th>In the application</th></tr></thead><tbody>
+<tr><td>the written promise, line by line</td><td>the project statement, split into 16 parts (S1 to S16)</td></tr>
+<tr><td>the car's driving log</td><td>the recording of the analyzer, exported as CSV files</td></tr>
+<tr><td>the practice car in the yard</td><td>synthetic recordings and the simulated drive</td></tr>
+<tr><td>a customer's car on the road</td><td>a real capture and a real drive</td></tr>
+<tr><td>the binder of repair cards</td><td>the procedural graph: each defect, its causes and their solutions</td></tr>
+<tr><td>the inspection station</td><td>the team's formal validation suite</td></tr>
+<tr><td>&ldquo;partly&rdquo; on the grade sheet</td><td>the strict verdict: built and measured, but not on real data</td></tr>
+</tbody></table></div>
+</div>
+
+<div class="card"><h3>The application's own example</h3>
+<p>The synthetic sample S17 holds 608 NVMe commands. A rule finds an error at NVMe command row 144. Code names the defect &ldquo;Read aborted by the host, status Command Abort Requested&rdquo;. Fixed rules give it a cause. The admin stores a solution, a test is written, and the test fails on a faulty simulated drive and passes on a correct one. That one error touches S1 (isolate), S6 (a first proposal from the model), S8 and S15 (a test script, handed over) and S9 (the loop). But S17 was made by the project's own generator, and the drive was a program. So it shows that the chain works, not that it finds real faults.</p>
+</div>
+
+<div class="card"><h3>The measured numbers in one place</h3>
+<ul>
+<li><b>Faults found:</b> 300 of 300 faults written into synthetic recordings were found at the exact command, all of the right kind. A simple filter on the status column found 40 %.</li>
+<li><b>False alarms:</b> 0 on 665 commands of clean recordings. With timing noise added: 2 on 2,415 commands, under the limit of 1 in 1,000 set for the test.</li>
+<li><b>Tests:</b> 22 of 22 written tests fail on a simulated drive with the defect and pass when it is fixed. They were written with 0 hand-written lines.</li>
+<li><b>Known failures:</b> 0 of 257 returns of known failures leaked back. This is true partly by construction: the second recording was the same recording with another random seed.</li>
+<li><b>Reading effort:</b> 93.4 % fewer commands to read at the lowest (median 93.8 %), on 20 synthetic runs. That counts rows, not hours. Nobody was timed.</li>
+<li><b>History:</b> on the simulated drive, stored history of the same kind of defect cut the median lab runs from 48 to 10 (better in 28 of 30). Stale history was worse in 25 of 30 cases, wrong history in 30 of 30, by up to 84 more runs.</li>
+<li><b>The search without the simulator's hint:</b> it found 33 of 50 hidden triggers, against 37 of 50 for a random choice. That is worse than random.</li>
+</ul>
+<p class="wn">Sources: the measured-evidence test and its reruns; the change records of 14 and 15 November; the coverage check of 15 November.</p>
+</div>
+
+<div class="card"><h3>The 16 parts, one row each</h3>
+<p>&ldquo;Built&rdquo; says where it is on the screens. &ldquo;Measured&rdquo; is on synthetic recordings or the simulated drive only. The verdict is the strict one of the coverage check of 15 November: a verdict changes only when the part is tested as a whole and, where the statement needs it, on real data.</p>
+<div class="tw"><table>
+<thead><tr><th>No.</th><th>What the statement asks</th><th>What was built, and where on the screens</th><th>What was measured (synthetic / simulated)</th><th>Strict verdict</th><th>What would prove it in the real world</th></tr></thead>
+<tbody>
+<tr><td colspan="6"><b>The problem</b></td></tr>
+<tr><td>S1</td><td>Isolate defects from a recording effectively.</td><td>The page of one error, opened from the errors page: the facts, the commands around the error, &ldquo;Isolate the defect&rdquo;. Code names the defect; fixed rules choose the cause. A command that never completed now has its cause read from the host's Abort, the reset and what the drive did meanwhile.</td><td>300 of 300 planted faults found at the exact command; 0 false alarms on 665 clean commands. The 7 timeout errors of S17 now get causes their rows justify (18 tests).</td><td><span class="stt part" style="margin:0">Partly</span></td><td>One real five-file capture with a confirmed defect, and the errors compared with the analyzer's own error list.</td></tr>
+<tr><td>S2</td><td>Reproduce failures faster in the lab.</td><td>The optional search on the page of one error. It replays changed sequences and counts how often the failure comes back. Choosing the real bench answers &ldquo;not connected yet&rdquo;.</td><td>With history of the same kind: median lab runs 48 &rarr; 10, better in 28 of 30. Stale history worse in 25 of 30, wrong in 30 of 30 (up to 84 more). Lab runs on a simulated drive are not lab time.</td><td><span class="stt no" style="margin:0">Not covered</span></td><td>A real drive behind the bench connection, with faulty and fixed firmware; the time to the first reproduction, with and without the tool.</td></tr>
+<tr><td>S3</td><td>Automate trace analysis from basic bug identification to precise reproduction.</td><td>One flow: start page, page 1 (the data), page 2 (the tree), page 3 (the rules), the errors page, the page of one error, the test. Code keeps the order: no error is listed before the admin approves the rule's result.</td><td>A whole flow, played twice: 72 checks, 0 failed. 22 of 22 written tests fail with the defect and pass when fixed.</td><td><span class="stt part" style="margin:0">Partly</span></td><td>A real capture through the whole flow, and its written tests run on a real drive.</td></tr>
+<tr><td>S4</td><td>Look for weaknesses before they fail in the field.</td><td>The stress step after a search pushes the timing harder while the failure still comes back. An item &ldquo;commands that came close to the limit&rdquo; was built, then moved to Deleted items: the NVMe command file does not hold the completion time it needs.</td><td>On the four samples that item listed nothing (largest share about 0.0013 % of the limit). An earlier sweep: 14 variants, 42 simulated lab runs, 3 filed as tests.</td><td><span class="stt part" style="margin:0">Partly (weak)</span></td><td>A command close to its limit on a real recording, swept on a real bench.</td></tr>
+<tr><td colspan="6"><b>The proposed solution</b></td></tr>
+<tr><td>S5</td><td>Pattern recognition and PCIe / link-layer trace analysis, on Teledyne LeCroy and VIAVI traces.</td><td>Any tool's recording, once exported as CSV, is read in its own form; the tool is recognised from the column names, not asked. Family 1 learns the columns. The rules library is one tree. 52 rule families for NVMe command errors were researched (38 runnable); a new installation keeps 3 and puts the other 37 in Deleted items.</td><td>On the four samples the 38 runnable families found 16 rows in all. One run with a real model on a disguised file: 15 of 15 column meanings right, but 11 of 15 had no source the program can check.</td><td><span class="stt part" style="margin:0">Partly</span></td><td>One real LeCroy export, and one real VIAVI export turned into text by the people who have the tool.</td></tr>
+<tr><td>S6</td><td>A language model writes a first test scenario that mimics the failure.</td><td>On the page of one error the model proposes which earlier commands are needed, why and how, the optimized sequence and what a correct drive must answer. Code checks every row it cites.</td><td>A real model answered in 3 live test groups (14 November). In the main flow code writes the first sequence and the model only picks rows.</td><td><span class="stt part" style="margin:0">Partly</span></td><td>A real model on real errors; count how often the admin had to correct its proposals.</td></tr>
+<tr><td>S7</td><td>A reinforcement-learning agent improves command order and timing from that seed, rewarded when the failure comes back.</td><td>The optional search changes which commands are sent, their order and their gaps, and scores each try by how often the same failure comes back. What it learns is kept on the graph as counts. No model is trained.</td><td>With the simulator's time hint: 50 of 50 hidden triggers found, random 37 of 50. Without it: 33 of 50, worse than random.</td><td><span class="stt part" style="margin:0">Partly</span></td><td>A real bench, and the same defect captured twice, to see whether stored timing brings it back again.</td></tr>
+<tr><td>S8</td><td>The most stressful conditions become test scripts in the formal validation suite.</td><td>The stress step; a test written from its result (part 6); part 7 builds one package for a suite and brings its result file back, counted as lab runs.</td><td>22 scripts written with 0 hand-written lines. The package and the result file passed their own tests (23 tests) with hand-written result files.</td><td><span class="stt part" style="margin:0">Partly</span></td><td>One package run in the team's suite on a real drive, with its result brought back and counted. The owner's ten questions about the suite need answers first.</td></tr>
+<tr><td colspan="6"><b>The goals</b></td></tr>
+<tr><td>S9</td><td>A self-optimizing framework closes the loop from detection to reproduction.</td><td>The admins' judgements reorder stored solutions; the search reads the graph and writes its runs back; a suite's result comes back as lab runs.</td><td>The graph's own tests passed. The loop has closed on the simulated drive only.</td><td><span class="stt part" style="margin:0">Partly</span></td><td>A real drive's result carried back to the graph, and the same defect captured twice on the same firmware.</td></tr>
+<tr><td>S10</td><td>Validated results (traces, workloads) are archived as a knowledge base.</td><td>Each time the admin validates something on an error, the rows around it are copied into the knowledge base and survive deleting the upload. The graph keeps every lab result with bench, timing, drive model and firmware. A table for workload records exists, without a screen.</td><td>Rows read back after the upload was deleted: 0.5 to 1.8 MB compressed per error on S17.</td><td><span class="stt part" style="margin:0">Partly</span></td><td>The window size on a real 4 to 6 GB capture, real workloads archived, and one store instead of two.</td></tr>
+<tr><td>S11</td><td>Reinforcement learning is applied to historical data to tune test parameters and workloads.</td><td>The next search of the same kind of defect starts from what earlier searches and lab runs left on the graph. Rows from another firmware are only a marked starting point.</td><td>Same-kind history: median 48 &rarr; 10 lab runs, better in 28 of 30. Stale: worse in 25 of 30. Wrong: worse in 30 of 30.</td><td><span class="stt no" style="margin:0">Not covered</span></td><td>A real bench with real history: the same kind of defect captured twice on the same firmware.</td></tr>
+<tr><td colspan="6"><b>Deployment</b></td></tr>
+<tr><td>S12</td><td>A validation suite plus an AI pipeline; analyzers supply the traces; scripts come from the optimized sequences.</td><td>One web application. The model connection is set in Settings. Analyzer recordings come in as CSV folders exported with the maker's software. Approved tests leave as a package. A Windows guide exists.</td><td>All 66 offline test groups passed on Linux (15 November).</td><td><span class="stt part" style="margin:0">Partly</span></td><td>The first run on the Windows laptop, a real analyzer export, and a real suite.</td></tr>
+<tr><td colspan="6"><b>Expected outcomes</b></td></tr>
+<tr><td>S13</td><td>About 50 % less hand work in the first look at the logs.</td><td>The automatic first sort: files read, errors found, window and cause made by code, known failures answered from memory.</td><td>93.4 % fewer commands to read (median 93.8 %), on 20 synthetic runs. That is rows, not hours. Nobody was timed.</td><td><span class="stt part" style="margin:0">Partly</span></td><td>Engineers timed with and without the tool on the same real recordings.</td></tr>
+<tr><td>S14</td><td>Better detection accuracy, full coverage, zero leakage of known failures.</td><td>The detector's rules, the three kept NVMe command error rules, and the memory of known failures.</td><td>300 of 300 found, against 40 % for a status-column filter. False alarms 0 on 665 clean commands, 2 on 2,415 noisy (limit 1 per 1,000). 0 of 257 known failures leaked (true by construction). Mild slow-downs missed: 5 times slower found in 29 of 48.</td><td><span class="stt part" style="margin:0">Partly</span></td><td>A real capture: the application's counts against the analyzer's own error list and a person's count by hand.</td></tr>
+<tr><td>S15</td><td>AI-driven automation cuts the hand work of designing and writing test scripts.</td><td>Part 6 of the page of one error: the model proposes what a correct drive must answer, code writes the test, a two-way check runs it, the admin approves.</td><td>22 scripts, 0 hand-written lines, all ran unedited on the simulated drive. A fixed template writes the file.</td><td><span class="stt part" style="margin:0">Partly</span></td><td>Minutes to write a test by hand and with the tool, timed; the scripts run unchanged on a real drive.</td></tr>
+<tr><td colspan="6"><b>The title</b></td></tr>
+<tr><td>S16</td><td>One integrated, closed-loop flow for quality control.</td><td>One flow from the start page to the hand-over. The search and the stress step sit on the page of one error.</td><td>The whole-flow tests passed (72 checks, 0 failed).</td><td><span class="stt part" style="margin:0">Partly</span></td><td>Cause, graph and test also for CSV files of other tools (today only for NVMe commands of the LeCroy five-file export), one store instead of two, and a real capture through the whole loop.</td></tr>
+</tbody></table></div>
+</div>
+
+<div class="card"><h3>What would move the verdicts</h3>
+<p>In the order of how much each unlocks:</p>
+<ol>
+<li><b>A real drive behind the bench connection</b>, with faulty and fixed firmware. It decides S2, S3, S4, S7, S8, S9, S12, S14 and S15.</li>
+<li><b>One real Teledyne LeCroy five-file capture with a confirmed defect.</b> It decides S1, S3, S5, S13 and S14.</li>
+<li><b>One real export of another tool</b>, for example VIAVI, turned into text by the people who have the tool. No reader per tool is written.</li>
+<li><b>The second half for any CSV:</b> a cause, a place in the graph and a test for an error of a file outside the five-file tree.</li>
+<li><b>A way to check column meanings</b> of an unknown tool before everything stands on them.</li>
+<li><b>Engineers timed</b>, with and without the tool, on real captures. The only way to S13.</li>
+<li><b>The owner's answers about the team's validation suite.</b> They decide S8 and S12.</li>
+</ol>
+<p>The work list for whoever has the real environment gives each item a number, what to do and what to write down.</p>
+</div>
+
+<div class="note"><b>The state of the code.</b> Build 26, 15 November 2026. A new installation keeps only 3 NVMe command error rules: NVMe command timeout, Read failed, and The command was aborted because the host asked. The other 37 rule families start in Deleted items; Restore brings one back.</div>
+<p class="wn">Where it lives: the statement in docs/OPPORTUNITY_STATEMENT.md; the strict verdicts in docs/OPPORTUNITY_COVERAGE_2026-11-15.md; the work list in deploy/REAL_ENVIRONMENT_WORK.md; the round of 15 November in docs/CHANGES_2026-11-15_round2.md; a step-by-step page beside this one, how_it_meets_the_statement.html.</p>
+
+<h2 id="buttons">10. The page of one error, part by part and button by button</h2>
+<p>Every error on the errors page has a button &ldquo;Isolate this error&rdquo;. It opens the page of that one error. Parts 1 to 3 show the facts, the commands around the error and the isolation (see <a href="#naming">section 4</a> and <a href="#walk">section 6</a>). This section explains what comes after: the cause, the solution, the four judgement buttons, the optional search, the test, the hand-over, and the question box.</p>
+
+<div class="card"><h3>First, a story: the garage binder</h3>
+<p>A car stalls, but only sometimes. The mechanic plugs in the reader and gets the car's log. The car itself writes a code for what happened, for example &ldquo;stalled in third gear, misfire code&rdquo;. The mechanic does not invent the name: it is the code, and every garage reads it the same way.</p>
+<p>The garage has a binder. In it, each kind of fault has a page. On the page are the possible causes, printed on a list: a mechanic ticks one, he cannot write his own. Under each cause are repair cards. Each card has two lists: &ldquo;what makes it stall again&rdquo; and &ldquo;what fixes it&rdquo;.</p>
+<p>After a repair, the mechanic stamps the card: <b>worked</b> or <b>did not work</b>. Next time, the cards with the best record are at the front. A card with one lucky stamp does not jump ahead of a card with a long good record.</p>
+<p>Before the car goes back, the mechanic writes a test drive: &ldquo;drive this route; the engine must not stall&rdquo;. He tries it on the practice car, once with the fault and once without. Then he signs it and sends it to the inspection station, which runs it on every car.</p>
+<div class="tw"><table><thead><tr><th>In the story</th><th>On the page of one error</th></tr></thead><tbody>
+<tr><td>the code the car writes (&ldquo;stalled in third gear, misfire&rdquo;)</td><td>the defect's name, made by code from the recording</td></tr>
+<tr><td>the printed list of causes</td><td>the 20 cause words (part 4)</td></tr>
+<tr><td>a repair card with its two lists</td><td>a solution: the error sequence and the optimized sequence (part 5)</td></tr>
+<tr><td>the stamps &ldquo;worked&rdquo; and &ldquo;did not work&rdquo;</td><td>the four judgement buttons</td></tr>
+<tr><td>cards with the best record at the front</td><td>the cautious score that orders the solutions</td></tr>
+<tr><td>trying the car on the practice track until it stalls</td><td>the optional search on the simulated drive</td></tr>
+<tr><td>the written test drive, tried with and without the fault</td><td>the test file and its two-way check (part 6)</td></tr>
+<tr><td>the inspection station</td><td>the team's validation suite (part 7)</td></tr>
+</tbody></table></div>
+</div>
+
+<div class="card"><h3>The application's example</h3>
+<p>Sample S17, the error at NVMe command row 144. It is a Read. The host sent an Abort for it 60 µs after the doorbell. The drive answered with the status Command Abort Requested. Code names the defect &ldquo;Read aborted by the host, status Command Abort Requested&rdquo;. All the examples below use this error.</p>
+</div>
+
+<div class="card"><h3>Part 4: The cause of this error</h3>
+<p><b>The name comes first, and nobody types it.</b> Fixed code builds the defect's name from the recording: the command, what happened to it, and the NVMe status. Everyone gets the same name for the same kind of error. The AI model never chooses it.</p>
+<p><b>The cause is one word from a list of 20.</b> The words are grouped by side: the host (3), the driver or admin software (3), the interrupt path (2), the device (6), the link (3), PCIe transactions (2), plus &ldquo;not decided from this recording&rdquo;. Free text is refused.</p>
+<p><b>The fixed rules propose a word.</b> 11 of the 20 words can be decided by the rules from the recording. The other 9 only the admin can choose, because the five exported files do not hold their evidence: queue set-up, the APST power state, interrupt coalescing, garbage collection, thermal throttling, a controller fatal error, waking from ASPM L1, no flow-control credits, and a PCIe read not answered.</p>
+<p><b>Example, row 144.</b> The rules chose &ldquo;a test tool or program aborted the command on purpose&rdquo;. Why: the Abort came 60 µs after the doorbell. That is sooner than this command type usually takes here (median 65.775 µs). The host's limit is 30 s, so the host was not out of time. <small>The margin is small: 5.775 µs. A slightly later Abort would have given &ldquo;the host's timer is shorter than the drive's normal answer time&rdquo;.</small></p>
+<p><b>Two buttons, one action.</b> &ldquo;Use this cause&rdquo; sends the rules' word. &ldquo;Use the chosen keyword&rdquo; sends the word picked in the drop-down. Behind both, the same steps run:</p>
+<ol>
+<li>Check that the rule's result was approved first.</li>
+<li>Check that the word is one of the 20.</li>
+<li>Find the cause under this defect, or create it the first time. Only causes someone chose exist in the binder; until then the 20 words exist only in the dictionary.</li>
+<li>Record one count for this error: error &rarr; defect &rarr; cause, with the drive model and firmware. Rows are only added, never changed.</li>
+<li>Copy the rows of the error's command, with 15 commands above and 15 below, into the knowledge base. For row 144 that is 6.72 MB, kept compressed in 1.68 MB. They survive deleting the upload.</li>
+<li>Open part 5.</li>
+</ol>
+<p>Choosing again for the same error moves its count to the new cause; it is not counted twice.</p>
+<p><b>The grey hint under each word</b> says what evidence would point at it. For example, &ldquo;packets were resent many times on the link&rdquo; needs Nak packets and repeated sequence numbers in the window. The window of row 144 has a clean link, so that word would be wrong there.</p>
+<p><b>If nothing fits</b>, choose &ldquo;not decided from this recording&rdquo;. Adding a new word needs a change in the code. That is a proposal; it is not built.</p>
+</div>
+
+<div class="card"><h3>Part 5: The solution</h3>
+<p>A solution is two lists, like the two sides of a repair card:</p>
+<ul>
+<li><b>The error sequence:</b> the commands that make the error happen again. Code cuts them from the recording. The error's own step always stays. The test is written from this list.</li>
+<li><b>The optimized sequence:</b> what fixes or avoids the problem, one action per line.</li>
+</ul>
+<p><b>If the cause already has stored solutions</b>, they are shown, the best judged first.</p>
+<p><b>If it has none</b>, the AI drafts the optimized lines. It receives the defect's name, the drive, the isolation text, the chosen cause and the error sequence. Its proposal stores nothing. The admin drops steps that are not needed and edits lines. &ldquo;Store this solution&rdquo; saves it as version 1, &ldquo;not yet judged&rdquo;, and records who made it: &ldquo;model, stored unchanged by &hellip;&rdquo; or &ldquo;model, edited by &hellip;&rdquo;.</p>
+<p><b>If stored ones do not fit</b>, &ldquo;None fits: store this recording's sequence as a new solution&rdquo; does the same with this recording's sequence.</p>
+</div>
+
+<div class="card"><h3>The four judgement buttons, and how the order changes</h3>
+<p>The application learns by counting. No AI model is trained.</p>
+<p><b>Why a count, and not just a share.</b> Think of a restaurant with two recipes for one dish. Recipe A: guests said &ldquo;good&rdquo; 9 times out of 10. Recipe B: 1 time out of 1. B's share is 100 %, A's is 90 %. But one happy guest proves little. A careful chef serves A first. The application thinks the same way.</p>
+<div class="tw"><table><thead><tr><th>Button</th><th>What is counted</th><th>Used for the test?</th></tr></thead><tbody>
+<tr><td><b>Correct</b></td><td>+1 correct, +1 judged</td><td>yes, this solution</td></tr>
+<tr><td><b>Correct with my edits</b></td><td>The first click opens the edits box. Save: +1 correct, +1 judged. The edits become the next version; the earlier version is kept.</td><td>yes, the new version</td></tr>
+<tr><td><b>Wrong</b></td><td>+1 judged only</td><td>no</td></tr>
+<tr><td><b>Wrong, keep my edits</b></td><td>+1 judged on this solution. The edits become a <b>new</b> solution, starting at 0 of 0.</td><td>yes, the new solution</td></tr>
+</tbody></table></div>
+<p>Only the latest judgement of one admin on one error counts. Every earlier row is kept.</p>
+<p><b>The order is a cautious score.</b> It is the lowest share judged correct that the counts still allow (95 %, one-sided). So one lucky judgement does not beat a long record. The real values:</p>
+<div class="tw"><table><thead><tr><th>Judged correct</th><th>0 of 0</th><th>1 of 1</th><th>2 of 2</th><th>1 of 2</th><th>2 of 3</th><th>4 of 5</th><th>9 of 10</th><th>0 of 1</th></tr></thead><tbody>
+<tr><td><b>Cautious score</b></td><td>0</td><td>0.27</td><td>0.43</td><td>0.12</td><td>0.25</td><td>0.44</td><td>0.65</td><td>0</td></tr>
+</tbody></table></div>
+<p>Recipe A (9 of 10) scores 0.65; recipe B (1 of 1) scores 0.27. A comes first. When two scores tie, a solution never judged (tie-break 0.50) comes before one judged wrong (0.33).</p>
+<p><b>A worked example over five days.</b> Each day an admin judges a different error of the same defect and cause.</p>
+<div class="tw"><table><thead><tr><th>Day</th><th>Judgement</th><th>Solution 1</th><th>Solution 2</th><th>Order shown</th></tr></thead><tbody>
+<tr><td>1</td><td>Correct on Solution 1</td><td>1 of 1 (0.27)</td><td>&ndash;</td><td>Sol 1</td></tr>
+<tr><td>2</td><td>Wrong, keep my edits on Solution 1</td><td>1 of 2 (0.12)</td><td>new, 0 of 0 (0)</td><td>Sol 1, Sol 2</td></tr>
+<tr><td>3</td><td>Correct on Solution 2</td><td>1 of 2 (0.12)</td><td>1 of 1 (0.27)</td><td><b>Sol 2</b>, Sol 1</td></tr>
+<tr><td>4</td><td>Correct on Solution 2</td><td>1 of 2 (0.12)</td><td>2 of 2 (0.43)</td><td>Sol 2, Sol 1</td></tr>
+<tr><td>5</td><td>Wrong on Solution 2</td><td>1 of 2 (0.12)</td><td>2 of 3 (0.25)</td><td>Sol 2 still on top</td></tr>
+</tbody></table></div>
+<p><b>Causes have their own order:</b> first by &ldquo;chosen as the cause in n of N&rdquo;, then by their best solution.</p>
+<p><b>A separate lab count.</b> Each stored solution also has &ldquo;the failure came back in k of n runs&rdquo;, from bench runs or from validation-suite result files. It decides only which stored solution the bench search tries first. That choice is a seeded random draw, so a new solution still gets tried. Example: one solution came back in 8 of 10 runs, and a brand-new one has no runs. The 8-of-10 one is tried first about 47 % of the time, because the new one starts from the cause's own good record. Against one that came back in 0 of 2, it is tried first about 96 % of the time. Runs from another firmware or drive model count as at most 2 runs.</p>
+<div class="note"><b>Two ledgers, never mixed.</b> Judgements order what is shown. Lab counts order what is tried. Neither changes the other.</div>
+<div class="note warn"><b>Honest notes.</b>
+<ul>
+<li>This is learning from counts. It is not textbook reinforcement learning, and no model is trained.</li>
+<li>&ldquo;Correct with my edits&rdquo; counts as a full correct.</li>
+<li>Three constants were chosen, not measured: the 95 % level, the cause's lab share being worth 2 runs, and other firmware being worth at most 2 runs. (Two more constants that set the timing brackets of the search were chosen the same way.)</li>
+</ul></div>
+</div>
+
+<div class="card"><h3>The optional search: the conditions that bring the failure back</h3>
+<p>Like a mechanic driving the practice car again and again until it stalls, this part replays changed sequences and counts how often the failure comes back.</p>
+<ul>
+<li><b>Nothing runs until the admin presses the button.</b></li>
+<li><b>Choose where to replay.</b> Today only the simulated drive. Nothing is pre-selected.</li>
+<li><b>Choose a budget</b> of lab runs: 200 by default, from 20 to 5,000.</li>
+<li><b>It starts from the stored solution whose failure came back most often</b>, unchanged, with the gaps set at values that worked before.</li>
+<li><b>Then it tries changed versions:</b> leave commands out or put them back, reorder only commands that do not depend on each other, change the gaps. Every command and value still comes from the recording.</li>
+<li><b>Each try runs 2 times,</b> and 10 times when the failure comes back.</li>
+<li><b>A stress step</b> then shortens the gaps while the failure still returns, with up to 90 more runs.</li>
+</ul>
+<p>The search writes its run counts back to the graph. It never writes a judgement and never stores a solution by itself. &ldquo;Store this sequence as a solution of the cause&rdquo; stays off until a search has finished; pressed, it stores the sequence as a new, not-judged solution.</p>
+<div class="note warn"><b>What a result means.</b> A result on the simulated drive shows that the search works. It never shows that a real drive fails. Without the simulator's time hint, the search found 33 of 50 hidden triggers, against 37 of 50 for a random choice.</div>
+</div>
+
+<div class="card"><h3>Part 6: The test case</h3>
+<ol>
+<li><b>&ldquo;Propose what a correct drive must answer&rdquo;.</b> The AI suggests the expected answer for each command. For row 144: the Read must end with Success, not Command Abort Requested. The admin corrects what is wrong.</li>
+<li><b>&ldquo;Write the test file&rdquo;.</b> Code writes the Python test. It replays the commands one by one and checks each answer.</li>
+<li><b>The two-way check</b> on the simulated drive. The test must fail on a faulty drive and pass on a correct one.</li>
+<li><b>&ldquo;Approve this test&rdquo;.</b> The admin's name, the time and a fingerprint of the file are stored. A file changed after approval cannot be handed over.</li>
+</ol>
+</div>
+
+<div class="card"><h3>Part 7: Hand over to the validation suite</h3>
+<ol>
+<li><b>Tick a test.</b> Only an approved test whose file has not changed can be ticked.</li>
+<li><b>&ldquo;Build the package&rdquo;.</b> A name is required. The result is one zip with the test, the replay library and a README.</li>
+<li><b>&ldquo;Bring in&rdquo;</b> the suite's result file (JUnit XML, at most 5 MB). It is recorded with the admin's name. It counts as lab runs of the solution only when the file says which bench ran it, that the run looked for the error, and in how many runs the failure came back. One run is counted once.</li>
+<li><b>&ldquo;What came back&rdquo;</b> lists the results brought in.</li>
+</ol>
+<div class="note warn"><b>Watch the library fingerprint.</b> If the replay library changed since the test was written, run the two-way check again before handing the test over.</div>
+<p><b>Example state on the owner's data:</b> version 1 of the test is not approved. Version 2 is approved and passed its two-way check. It has only ever run on the simulated drive.</p>
+</div>
+
+<div class="card"><h3>&ldquo;Ask the model about this error&rdquo;</h3>
+<p>A question box. The model answers about this error. Nothing on the page or in the binder changes.</p>
+</div>
+
+<div class="card"><h3>Who does what</h3>
+<div class="tw"><table><thead><tr><th>Part</th><th>AI model</th><th>Fixed code</th><th>Admin</th></tr></thead><tbody>
+<tr><td>Parts 1 to 3: facts, window, isolation</td><td>writes why and how in words</td><td>computes the facts and the window; names the defect; checks every row the model cites</td><td>sets the window, presses &ldquo;Isolate the defect&rdquo;</td></tr>
+<tr><td>Part 4: the cause</td><td>nothing</td><td>proposes a word by fixed rules; checks the word is one of the 20; records the count; keeps the rows</td><td>uses the rules' word or picks another</td></tr>
+<tr><td>Part 5: the solution</td><td>drafts the optimized lines when none is stored</td><td>cuts the error sequence from the recording; stores versions with who made them</td><td>drops and edits lines; stores the solution</td></tr>
+<tr><td>The four judgements</td><td>nothing</td><td>counts them; orders solutions by the cautious score</td><td>presses one of the four buttons</td></tr>
+<tr><td>The optional search</td><td>nothing</td><td>runs the tries on the simulated drive; writes run counts back</td><td>presses start; picks the bench and the budget; decides to store the sequence</td></tr>
+<tr><td>Part 6: the test</td><td>proposes what a correct drive must answer</td><td>writes the test file; runs the two-way check; stores the fingerprint</td><td>corrects the answers; approves the test</td></tr>
+<tr><td>Part 7: the hand-over</td><td>nothing</td><td>builds the zip; reads the result file; counts lab runs only when the file says enough</td><td>ticks the test; names the package; brings in the result</td></tr>
+<tr><td>Ask the model</td><td>answers</td><td>changes nothing</td><td>asks</td></tr>
+</tbody></table></div>
+</div>
+<p class="wn">Where it lives: the page is app/static/isolate.html with app/static/js/isolate.js; the routes in app/api/isolate_api.py and app/api/dg_api.py; the cause words and rules in nvme_hier/terms.py and nvme_hier/evidence.py; the binder in nvme_hier/defect_graph.py and nvme_hier/graph_learning.py. A step-by-step page beside this one: how_the_error_page_works.html.</p>
+
 <details class="glos"><summary>Words used on this page</summary>
 <div class="tw"><table><tbody>
 <tr><td>SSD</td><td>Solid-state drive.</td></tr>
