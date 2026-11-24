@@ -5,15 +5,18 @@ computer and a solid-state drive (PCI Express and NVMe), finds the errors with f
 replays a failure. AI agents do the drafting; a named person, the admin, approves every step. No model is trained.
 
 **Be aware.** Every recording here is synthetic: made by the project's own generator, none from a real drive. The
-application was written and tested on Linux. **It has never run on Windows**; that is the next piece of work.
+application was written and tested on Linux. On 24 November 2026 it ran on Windows for the first time (the addition to build
+26: the server started, and the offline test suites ran in Git Bash); some build 26 test groups use Linux-only parts of Python
+and fail on Windows, as `docs/CHANGES_2026-11-24.md` section 9 records.
 
 ## What is here
 
 | File | What it is |
 |---|---|
-| `field_to_test_loop_2026-11-15_build26_three_rules_on_every_installation.zip` + `.SHA256.txt` | the application's code (unpacks to `13_production_app`) |
+| `field_to_test_loop_2026-11-24_build26_addition_windows_adk_etl_pcmark10.zip` + `.SHA256.txt` | **the newest code**: build 26 plus Windows ADK ETL + XML, every command under every process, I/O latency in 5 µs buckets and PCMark 10 Storage (unpacks to `13_production_app`; see "The addition to build 26" below) |
+| `field_to_test_loop_2026-11-15_build26_three_rules_on_every_installation.zip` + `.SHA256.txt` | build 26 as it was (unpacks to `13_production_app`) |
 | `field_to_test_loop_sample_recordings.zip` + `.SHA256.txt` | five small synthetic recordings for the tests and a first analysis (unpack **inside** `13_production_app`) |
-| `document.html` | the whole system explained, with where the work stands on 15 November 2026 (build 24; build 25 adds what the README section on build 25 says). Download it and open it in a browser |
+| `document.html` | the whole system explained, with where the work stands on 15 November 2026 (build 24; build 25 adds what the README section on build 25 says) and, at the top, the addition of 24 November (Windows ADK ETL, every command, PCMark 10). Download it and open it in a browser |
 | `errors.html` | the errors an analyzer export can hold, explained |
 | `research.html` | research ideas that came out of the work |
 | `lecroy_export_column_names.zip` + `.SHA256.txt` | the column names of the analyzer's CSV exports |
@@ -26,7 +29,7 @@ You need Python 3.10 or newer (from python.org, with "Add python.exe to PATH" ti
 
 ```powershell
 # PowerShell, in the folder with the downloaded files
-Expand-Archive .\field_to_test_loop_2026-11-15_build26_three_rules_on_every_installation.zip -DestinationPath C:\f2t
+Expand-Archive .\field_to_test_loop_2026-11-24_build26_addition_windows_adk_etl_pcmark10.zip -DestinationPath C:\f2t
 Expand-Archive .\field_to_test_loop_sample_recordings.zip -DestinationPath C:\f2t\13_production_app
 cd C:\f2t\13_production_app
 py -3 -m venv .venv
@@ -75,6 +78,22 @@ Open the agent in `C:\f2t\13_production_app` and give it these one at a time.
 The design has no code per measuring tool: any tool's recording is converted to CSV by the people who have the tool, and
 the agent families learn the columns from the files. Of 16 statements, 0 are fully covered, 14 partly, 2 not; these
 verdicts were not raised for what was built on 14 and 15 November, because nothing has run on real data yet.
+
+**The addition to build 26 (24 November 2026)** adds, without taking anything away: a field on the start page for the category
+of the input (Windows ADK, Teledyne LeCroy PCIe, PCMark 10 Storage, another tool, or recognised from the files).
+*Windows ADK (ETL + XML):* the assessment's traces and XML files in any folder layout and under any names, no CSV needed;
+each trace decoded with xperf; a run is PASS when the mean Fast Startup time of its iterations is at most 14 s; every run is
+kept and the PASS runs make a benchmark; Compare ranks phase (pre-logon, logon, post-logon), process, command and file, and
+lists **every command under every process** (disk and file I/O, page faults, driver time, every begin/end a Windows component
+logs, child processes and threads, CPU, waits, DLL loads, every other event type) with its files, DLLs, drivers and modules;
+I/O latency in 5 µs buckets; a summary whose numbers are checked. On the owner's real traces it finds the 128 s wait of the
+volume-snapshot driver and 133 s of CPU in Ntfs.sys before the logon screen. *PCMark 10 Storage:* .pcmark10-result archives or
+their CSV / XML read with UL's documented names (layout detected from each file), compared with a baseline of good results.
+This is the first build that was run on Windows: the whole offline suite ran on a Windows laptop (Python 3.12, Git Bash)
+on this build and on build 26 as it was. No test group and no test has another result than on build 26: 55 of 73 groups pass
+(the two new groups, 27 and 19 tests, included), and the same 18 groups fail on build 26 too, for Windows reasons (Linux-only
+parts of Python, the sample recordings not unpacked, Unix file behaviour); `docs/CHANGES_2026-11-24.md` section 9 has the list. Every Windows
+ADK XML there was synthetic and no real PCMark 10 result was available; the pages were not looked at in a browser.
 
 **Build 26 (15 November 2026)** makes a new installation keep only the three NVMe command rules as well: on the first start the
 37 other rule families go straight to Deleted items (Restore brings one back); an existing library is left as it is. Every
